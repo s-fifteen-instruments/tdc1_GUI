@@ -193,8 +193,8 @@ class MainWindow(QMainWindow):
         defaultFont = QtGui.QFont("Helvetica", 14)
         
         #---------Buttons---------#
-        self.scanForDevice_Button = QtWidgets.QPushButton("Scan for Device", self)
-        self.scanForDevice_Button.clicked.connect(self.updateDevList)
+        #self.scanForDevice_Button = QtWidgets.QPushButton("Scan for Device", self)
+        #self.scanForDevice_Button.clicked.connect(self.updateDevList)
         #self.scanForDevice_Button.setFixedSize(QSize(115, 35))
 
         self.liveStart_Button = QtWidgets.QPushButton("Live Start", self)
@@ -413,7 +413,7 @@ class MainWindow(QMainWindow):
         self.grid.addWidget(self.samplesLabel, 1, 2)
         self.grid.addWidget(self.samplesSpinbox, 1, 3, 1, 1)
         self.grid.addWidget(self.liveStart_Button, 2, 0)
-        self.grid.addWidget(self.scanForDevice_Button, 2, 1)
+        #self.grid.addWidget(self.scanForDevice_Button, 2, 1)
         self.grid.addWidget(self.selectLogfile_Button, 2, 2)
         self.grid.addWidget(self.logfileLabel, 2, 3)
         self.grid.addWidget(self.tabs, 4, 0, 5, 4)

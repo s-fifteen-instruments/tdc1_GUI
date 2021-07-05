@@ -2,7 +2,7 @@
 
 INFO
 
-1. This program is a Graphical User Interface (GUI) for s-fifteen intruments TDC1 Timestamp Device. 
+1. This program is a Graphical User Interface (GUI) for s-fifteen intruments' TDC1 Timestamp Device https://s-fifteen.com/products/timestamp.
 
 CONTACT
 

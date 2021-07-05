@@ -801,7 +801,7 @@ if __name__ == '__main__':
 
 
 ######################
-# Things to Note     #
+# Things to Note (For Developer)    #
 ######################
 
 # 1. Only communicate with worker via Signals and Slots
@@ -814,5 +814,5 @@ if __name__ == '__main__':
 
 # 1. This code processes and plots data from TDC1 timestamp unit
 # 2. There are two classes: logWorker and MainWindow
-#   - logWorker handles the data logging to the csv file via a separate thread
-#   - MainWindow contains the GUI as well as graph plotting functions
+#   - logWorker handles the data logging to the csv file via a separate thread to ensure the GUI doesn't freeze up while data collection is ongoing.
+#   - MainWindow contains the GUI as well as graph plotting functions.

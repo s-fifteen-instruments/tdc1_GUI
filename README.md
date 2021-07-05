@@ -10,9 +10,18 @@ CONTACT
 
 INSTALLATION
 
-1. Follow instructions at https://github.com/s-fifteen-instruments/pyS15 and install S15lib python package.
+Install the S15lib python package directly with
+ 
+    pip install git+https://github.com/s-fifteen-instruments/pyS15.git
+
+Alternatively you can clone or download the package from https://github.com/s-fifteen-instruments/pyS15.git.
+Open a command-line terminal, go into the repository folder and type
+  
+    pip install -e .
+    
+1. Full installation instructions at https://github.com/s-fifteen-instruments/pyS15.
 2. Other python package requirements: numpy, pyqt5, pyqtgraph, datetime, time. Install with pip or preferred mode of installation.
-3. Run tdc1_gui.py with your compiler of choice (This GUI was developed in Visual Studio Code with Python 3.9.2 64-bit). 
+3. Run tdc1_gui.py with your compiler of choice (This GUI was developed in Visual Studio Code with Python 3.9.2 64-bit).
 
 ![image](https://user-images.githubusercontent.com/52197879/124213246-cecf5f80-db22-11eb-932d-57dfb3ce32bd.png)
 

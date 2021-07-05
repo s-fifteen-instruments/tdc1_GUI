@@ -20,8 +20,8 @@ HOW TO USE
 
 1. Ensure device is connected to PC.
 2. Select Device from drop down menu.
-3. Select GUI Mode - singles/pairs. (This is NOT equivalent to the TDC1 mode. For instance the pairs mode uses the TDC1's timestamp mode (3) for its g2 calculations. The modes correspond to the tabs - singles:counts, pairs:coincidences.)
-4. Select Logfile if logging is desired. Leave empty if not desired.
+3. Select GUI Mode - singles/pairs. (This is NOT equivalent to the TDC1 mode. For instance the pairs mode uses the TDC1's timestamp mode (3) for its g2 calculations. The modes correspond to the graph tabs - singles:counts, pairs:coincidences.)
+4. Select a Logfile if logging is desired. It is best to write the data to a new, blank Logfile. Leave field empty if not desired.
 5. Select Integration time (singles) / acquisition time (pairs) by pressing the arrows or typing in manually.
 6. Select Plot Samples. This determines how many data points to display on the graph at once.
 7. If in Pairs mode, select start and stop channel (Default Start:1, Stop:3), histogram bin width.

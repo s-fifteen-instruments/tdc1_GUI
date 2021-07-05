@@ -8,7 +8,7 @@ CONTACT
 
 1. For any bug reports/suggestions, please contact the developer at info@s-fifteen.com or g3.ganjunherng@gmail.com.
 
-INSTALLATION
+INSTALLATION QUICKSTART
 
 Install the S15lib python package directly with
  
@@ -29,10 +29,20 @@ HOW TO USE
 
 1. Ensure device is connected to PC.
 2. Select Device from drop down menu.
+![select device](https://user-images.githubusercontent.com/52197879/124435473-9db39100-dda7-11eb-9b19-a08d1fb7be4f.png)
+
 3. Select GUI Mode - singles/pairs. (This is NOT equivalent to the TDC1 mode. For instance the pairs mode uses the TDC1's timestamp mode (3) for its g2 calculations. The modes correspond to the graph tabs - singles:counts, pairs:coincidences.)
+![select mode](https://user-images.githubusercontent.com/52197879/124435510-a60bcc00-dda7-11eb-9326-9cf83baca23d.png)
+
 4. Select a Logfile if logging is desired. It is best to write the data to a new, blank Logfile. Leave field empty if not desired.
+![select logfile](https://user-images.githubusercontent.com/52197879/124435622-bde35000-dda7-11eb-99d3-430c82e42f75.png)
+
 5. Select Integration time (singles) / acquisition time (pairs) by pressing the arrows or typing in manually.
+![select int](https://user-images.githubusercontent.com/52197879/124435863-fdaa3780-dda7-11eb-842f-0510d9d63b86.png)
+
 6. Select Plot Samples. This determines how many data points to display on the graph at once.
+![select PLS](https://user-images.githubusercontent.com/52197879/124435788-e703e080-dda7-11eb-976e-f341aad22fca.png)
+
 7. If in Pairs mode, select start and stop channel (Default Start:1, Stop:3), histogram bin width.
 8. Hit 'Live Start' button.
 9. If in singles mode, select the respective radio buttons to see the plots.

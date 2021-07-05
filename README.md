@@ -22,7 +22,7 @@ Open a command-line terminal, go into the repository folder and type
     
 1. Full installation instructions at https://github.com/s-fifteen-instruments/pyS15.
 2. Other python package requirements: numpy, pyqt5, pyqtgraph, datetime, time. Install with pip or preferred mode of installation.
-3. Run tdc1_gui.py with your compiler of choice (This GUI was developed in Visual Studio Code with Python 3.9.2 64-bit).
+3. Run tdc1_gui.py with your Python compiler of choice (This GUI was developed in Visual Studio Code with Python 3.9.2 64-bit).
 
 ![image](https://user-images.githubusercontent.com/52197879/124213246-cecf5f80-db22-11eb-932d-57dfb3ce32bd.png)
 
@@ -38,7 +38,7 @@ HOW TO USE
 4. Select a Logfile if logging is desired. It is best to write the data to a new, blank Logfile. Leave field empty if not desired.
 ![select logfile](https://user-images.githubusercontent.com/52197879/124435622-bde35000-dda7-11eb-99d3-430c82e42f75.png)
 
-5. Select Integration time (singles) / acquisition time (pairs) by pressing the arrows or typing in manually.
+5. Select Integration time (singles) / acquisition time (pairs) by pressing the arrows or typing in manually then hitting enter.
 ![select int](https://user-images.githubusercontent.com/52197879/124435863-fdaa3780-dda7-11eb-842f-0510d9d63b86.png)
 
 6. Select Plot Samples. This determines how many data points to display on the graph at once.

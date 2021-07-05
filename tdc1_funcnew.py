@@ -19,8 +19,7 @@ from S15lib.instruments import serial_connection
     the data in a live-updating graph.
 
     Usage:
-    Live Start button can be used to start the graphing without any logging.
-    Select logfile and Start logging buttons are used to log data to a csv file in addition to plotting.
+    Live Start button starts the logging process. If a log file has been selected, the data will be written to a file of the user's choosing.
 """
 
 

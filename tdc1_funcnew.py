@@ -688,7 +688,7 @@ class MainWindow(QMainWindow):
         incremental_y = g2_data['histogram']
         incremental_y_int = incremental_y.astype(np.int32)
         self.y0 += incremental_y_int
-        center = self.centerSpinbox.currentValue()
+        center = self.centerSpinbox.value()
         idx = int(-(-center//self.binsize)) # Upside-down floor div aka ceiling div
         startidx = idx - idx_width
         stopidx = idx + idx_width

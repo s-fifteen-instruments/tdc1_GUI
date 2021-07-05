@@ -19,7 +19,8 @@ from S15lib.instruments import serial_connection
     the data in a live-updating graph.
 
     Usage:
-    Live Start button starts the logging process. If a log file has been selected, the data will be written to a file of the user's choosing.
+    Live Start button can be used to start the graphing without any logging.
+    Select logfile and Start logging buttons are used to log data to a csv file in addition to plotting.
 """
 
 
@@ -59,6 +60,8 @@ class logWorker(QtCore.QObject):
         device_path, log_flag, dev_mode, tdc1_dev)
         elif dev_mode == 'pairs':
             print('initiating coincidences log...')
+            #print(f'calling log_g2({file_name}, {device_path}, {log_flag}, {dev_mode}, \
+                {tdc1_dev}')
             self.log_g2(file_name, device_path, log_flag, dev_mode, \
                 tdc1_dev)
         elif dev_mode == 'timestamp':
@@ -140,6 +143,7 @@ class logWorker(QtCore.QObject):
         # Performs all the actions of log_counts_data PLUS gathering the data to plot histogram
         # tdc1_dev.get_timestamps() automatically puts device in timestamp mode (3)
         while self.active_flag == True:
+            #print(f'calling g2_dict({self.int_time}, {self.ch_start}, {self.ch_stop}, {self.bin_width}, {self.bins}')
             g2_dict = tdc1_dev.count_g2(self.int_time, ch_start = self.ch_start, ch_stop = self.ch_stop, \
                 bin_width = self.bin_width, bins = self.bins)
             self.histogram_logged.emit(g2_dict)
@@ -194,7 +198,7 @@ class MainWindow(QMainWindow):
         
         #---------Buttons---------#
         #self.scanForDevice_Button = QtWidgets.QPushButton("Scan for Device", self)
-        #self.scanForDevice_Button.clicked.connect(self.updateDevList)
+        #elf.scanForDevice_Button.clicked.connect(self.updateDevList)
         #self.scanForDevice_Button.setFixedSize(QSize(115, 35))
 
         self.liveStart_Button = QtWidgets.QPushButton("Live Start", self)
@@ -236,16 +240,16 @@ class MainWindow(QMainWindow):
         self.integrationLabel = QtWidgets.QLabel("Integration time (ms):", self)
 
         self.Ch1CountsLabel = QtWidgets.QLabel("0", self)
-        self.Ch1CountsLabel.setStyleSheet("color: red; font-size: 108px")
+        self.Ch1CountsLabel.setStyleSheet("color: red; font-size: 128px")
         self.Ch1CountsLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.Ch2CountsLabel = QtWidgets.QLabel("0", self)
-        self.Ch2CountsLabel.setStyleSheet("color: green; font-size: 108px")
+        self.Ch2CountsLabel.setStyleSheet("color: green; font-size: 128px")
         self.Ch2CountsLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.Ch3CountsLabel = QtWidgets.QLabel("0", self)
-        self.Ch3CountsLabel.setStyleSheet("color: blue; font-size: 108px")
+        self.Ch3CountsLabel.setStyleSheet("color: blue; font-size: 128px")
         self.Ch3CountsLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.Ch4CountsLabel = QtWidgets.QLabel("0", self)
-        self.Ch4CountsLabel.setStyleSheet("color: black; font-size: 108px")
+        self.Ch4CountsLabel.setStyleSheet("color: black; font-size: 128px")
         self.Ch4CountsLabel.setAlignment(QtCore.Qt.AlignCenter)
 
         self.startChannelLabel = QtWidgets.QLabel("Start Channel:", self)
@@ -265,11 +269,11 @@ class MainWindow(QMainWindow):
         self.integrationSpinBox.setKeyboardTracking(False) # Makes sure valueChanged signal only fires when you want it to
         self.integrationSpinBox.valueChanged.connect(self.update_intTime)
 
-        dev_list = serial_connection.search_for_serial_devices(
+        self.dev_list = serial_connection.search_for_serial_devices(
             tdc1.TimeStampTDC1.DEVICE_IDENTIFIER)
         self.devCombobox = QComboBox(self)
         self.devCombobox.addItem('Select your device')
-        self.devCombobox.addItems(dev_list)
+        self.devCombobox.addItems(self.dev_list)
         self.devCombobox.currentTextChanged.connect(self.selectDevice)
 
         _dev_modes = ['singles', 'pairs']
@@ -303,6 +307,7 @@ class MainWindow(QMainWindow):
         self.resolutionSpinbox = QSpinBox(self)
         self.resolutionSpinbox.setRange(0, 1000)
         self.resolutionSpinbox.setKeyboardTracking(False)
+        self.resolutionSpinbox.setValue(2) # Default 2 ns bin width
         self.resolutionSpinbox.valueChanged.connect(self.updateBins)
         #---------Interactive Fields---------#
 
@@ -413,7 +418,7 @@ class MainWindow(QMainWindow):
         self.grid.addWidget(self.samplesLabel, 1, 2)
         self.grid.addWidget(self.samplesSpinbox, 1, 3, 1, 1)
         self.grid.addWidget(self.liveStart_Button, 2, 0)
-        #self.grid.addWidget(self.scanForDevice_Button, 2, 1)
+        #self.grid.addWidget(self.scanForDevice_Button, 2, 1) # Error opening port.
         self.grid.addWidget(self.selectLogfile_Button, 2, 2)
         self.grid.addWidget(self.logfileLabel, 2, 3)
         self.grid.addWidget(self.tabs, 4, 0, 5, 4)
@@ -665,19 +670,23 @@ class MainWindow(QMainWindow):
 
     @QtCore.pyqtSlot(str)
     def updateStart(self, channel: str):
+        print(f'updating start channel to:{channel}')
         cs = int(channel)
         if self.acq_flag == True and self.modesCombobox.currentText() == "pairs":
             self._ch_start = cs
             if self.logger:
                 self.logger.ch_start = cs
+        print('logger start channel is now: ' + str(self.logger.ch_start))
 
     @QtCore.pyqtSlot(str)
     def updateStop(self, channel: str):
+        print(f'updating stop channel to: {channel}')
         cs = int(channel)
         if self.acq_flag == True and self.modesCombobox.currentText() == "pairs":
             self._ch_stop = cs
             if self.logger:
                 self.logger.ch_stop = cs
+        print('logger stop channel is now: ' + str(self.logger.ch_stop))
 
     
     # Histogram
@@ -689,26 +698,27 @@ class MainWindow(QMainWindow):
         incremental_y_int = incremental_y.astype(np.int32)
         self.y0 += incremental_y_int
         center = self.centerSpinbox.value()
-        idx = int(-(-center//self.binsize)) # Upside-down floor div aka ceiling div
-        startidx = idx - idx_width
-        stopidx = idx + idx_width
-        try:    
+        b = self.plotSamples//2
+        if self.plotSamples % 2:
+            startidx = center - b
+            stopidx = center + b - 1
+        else:
+            startidx = center - b
+            stopidx = center + b
+        #idx = int(-(-self.plotSamples//self.binsize)) # Upside-down floor div aka ceiling div
+        #print('startidx: ' + str(startidx))
+        #print('stopidx ' + str(stopidx))
+        if startidx < 0:
+            self.x0new = self.x0[:stopidx]
+            self.y0new = self.y0[:stopidx]
+        else:    
             self.x0new = self.x0[startidx:stopidx]
             self.y0new = self.y0[startidx:stopidx]
-        # If startidx is negative
-        except IndexError:
-            try:
-                self.x0new = self.x0[:stopidx]
-                self.y0new = self.y0[:stopidx]
-            except IndexError:
-                try:
-                    self.x0new = self.x0[startidx:]
-                    self.y0new = self.y0[startidx:]
-                except:
-                    pass
+        #print(self.x0new)
+        #print(self.y0new)
         self.histogramPlot.setData(self.x0new, self.y0new)
         totalpairs = np.sum(self.y0, dtype=np.int32)
-        self.pairsRateLabel.setText("<font size=24>Pairs/sec: </font><br>" + "<font size=96>" + totalpairs + "</font>")
+        self.pairsRateLabel.setText("Total Pairs: " + "<br>" + str(totalpairs))
 
     # Reserve in case above func fails
     # def updateHistogram(self, g2_data: dict):
@@ -800,9 +810,9 @@ if __name__ == '__main__':
     main()
 
 
-######################
+#####################################
 # Things to Note (For Developer)    #
-######################
+#####################################
 
 # 1. Only communicate with worker via Signals and Slots
 #   - Do not call any of its methods from the main thread -> But variables are fine...?
@@ -814,5 +824,5 @@ if __name__ == '__main__':
 
 # 1. This code processes and plots data from TDC1 timestamp unit
 # 2. There are two classes: logWorker and MainWindow
-#   - logWorker handles the data logging to the csv file via a separate thread to ensure the GUI doesn't freeze up while data collection is ongoing.
-#   - MainWindow contains the GUI as well as graph plotting functions.
+#   - logWorker handles the data logging to the csv file via a separate thread
+#   - MainWindow contains the GUI as well as graph plotting functions

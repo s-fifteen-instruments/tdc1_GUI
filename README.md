@@ -7,6 +7,7 @@ INFO
 CONTACT
 
 1. For any bug reports/suggestions, please contact the developer at info@s-fifteen.com or g3.ganjunherng@gmail.com.
+2. It would be helpful if you included the error messages printed out to the terminal or whatever program that is catching the errors. (Do not worry if you cannot find this.)
 
 INSTALLATION QUICKSTART
 
@@ -43,9 +44,10 @@ HOW TO USE
 6. Select Plot Samples. This determines how many data points to display on the graph at once.
 ![select PLS](https://user-images.githubusercontent.com/52197879/124435788-e703e080-dda7-11eb-976e-f341aad22fca.png)
 
-7. If in Pairs mode, select start and stop channel (Default Start:1, Stop:3), histogram bin width.
-8. Hit 'Live Start' button.
-9. If in singles mode, select the respective radio buttons to see the plots.
+7. Hit 'Live Start' button.
+8. If in Singles mode, select the respective radio buttons to see the plots. 
+9. If in Pairs mode, select start and stop channel (Default Start:1, Stop:3), histogram bin width.
 10. If in pairs mode, switch to the 'coincidences' tab to view the histogram. The value in the 'Center' spin box allows you to set the center of the histogram display if you already have a rough idea of the expected time delays in your experimental setup.
 ![image](https://user-images.githubusercontent.com/52197879/124213839-da6f5600-db23-11eb-8de3-9a1dae546236.png)
 11. Use mouse to interact with the graph - Click and drag to pan, scroll to zoom, right click for more viewing options.
+12. The GUI is under continual development and may bug out if certain buttons are clicked too many times or clicked in unexpected order. Please report any errors to the contact addresses listed at the top of this README. Meanwhile, simply closing and restarting the GUI should fix the errors. These are usually due to certain background flags that have not been set to the right state. Restarting the GUI sets all the flags to their default state.

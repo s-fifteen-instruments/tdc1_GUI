@@ -124,7 +124,7 @@ class logWorker(QtCore.QObject):
                 with open(file_name, 'a+') as f:
                     # Organising data into pairs
                     time_data: str = datetime.now().isoformat()
-                    data_pairs = '{},{}\n'.format(time_data, counts)
+                    data_pairs = '{},{}\n'.format(time_data, coincidences)
                     f.write(data_pairs)
                 if self.active_flag == False:
                     break

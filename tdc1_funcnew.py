@@ -61,7 +61,7 @@ class logWorker(QtCore.QObject):
         elif dev_mode == 'pairs':
             print('initiating coincidences log...')
             #print(f'calling log_g2({file_name}, {device_path}, {log_flag}, {dev_mode}, \
-                {tdc1_dev}')
+            #    {tdc1_dev}')
             self.log_g2(file_name, device_path, log_flag, dev_mode, \
                 tdc1_dev)
         elif dev_mode == 'timestamp':

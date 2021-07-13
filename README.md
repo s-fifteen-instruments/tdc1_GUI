@@ -1,5 +1,7 @@
 # sfifteen tdc1 GUI (1.1)
 
+NOTE: Slightly outdated as of 13/7 - README update coming soon. The GUI has been updated to v1.2, with more robust functioning and a couple new buttons. The instructions below still hold in general.
+
 INFO
 
 1. This program is a Graphical User Interface (GUI) for s-fifteen intruments' TDC1 Timestamp Device https://s-fifteen.com/products/timestamp.

@@ -937,7 +937,7 @@ class MainWindow(QMainWindow):
 
     @QtCore.pyqtSlot()
     def endRun(self):
-        print('end run called')
+        #print('end run called')
         self.liveStart_Button.setEnabled(False)
         QtCore.QTimer.singleShot(1000, lambda: self.liveStart_Button.setEnabled(True)) # In milliseconds
         self.acq_flag = False
@@ -953,13 +953,13 @@ class MainWindow(QMainWindow):
     def startTimer(self):
         time = self.timer.start(1000)
         self.timer.timeout.connect(self.updateTimer)
-        print('timer connected')
+        #print('timer connected')
     
     def stopTimer(self):
         if self.timer.isActive():
             self.timer.stop()
             self.timer.timeout.disconnect()
-            print('timer disconnected')
+            #print('timer disconnected')
 
     def updateTimer(self):
         if self._runtime > 0:
@@ -985,7 +985,7 @@ class MainWindow(QMainWindow):
         try:
             self._tdc1_dev._com.close()
         except AttributeError:
-            print('TDC1 object not yet created.')
+            #print('TDC1 object not yet created.')
         finally:
             self._tdc1_dev = None  # tdc1 device object
             self._dev_mode = '' # 0 = 'singles', 1 = 'pairs', 3 = 'timestamp'

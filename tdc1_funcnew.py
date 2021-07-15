@@ -985,7 +985,7 @@ class MainWindow(QMainWindow):
         try:
             self._tdc1_dev._com.close()
         except AttributeError:
-            #print('TDC1 object not yet created.')
+            print('TDC1 object not yet created.')
         finally:
             self._tdc1_dev = None  # tdc1 device object
             self._dev_mode = '' # 0 = 'singles', 1 = 'pairs', 3 = 'timestamp'

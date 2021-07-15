@@ -39,7 +39,7 @@ HOW TO USE
 
 
 4. Select a Logfile if logging is desired. It is best to write the data to a new, blank Logfile. Leave field empty if not desired.
-![select logfile](https://user-images.githubusercontent.com/52197879/125743281-6deff07e-6b41-4577-919f-e1eaf6def9cd.png)
+![select logfile](https://user-images.githubusercontent.com/52197879/125744902-95df7e59-e13f-4c33-9e13-d7f9f9c8273f.png)
 
 
 5. Select Integration time (singles) / acquisition time (pairs) by pressing the arrows or typing in manually then hitting enter.

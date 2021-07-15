@@ -3,7 +3,7 @@ import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QMenu, \
     QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QDialog, QRadioButton, QSpinBox, \
-    QDoubleSpinBox, QTabWidget, QComboBox, QMessageBox, QGroupBox
+    QDoubleSpinBox, QTabWidget, QComboBox, QMessageBox, QGroupBox, QCheckBox
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import QSize, QTimer, bin_
 import pyqtgraph as pg
@@ -50,6 +50,7 @@ class logWorker(QtCore.QObject):
         self.bin_width = 2
         self.bins = 501
         self.offset = 0
+        self.runtime = 0
     
     # Connected to MainWindow.logging_requested
     @QtCore.pyqtSlot(int, str, str, bool, str, object, int, int, int, int)
@@ -103,7 +104,7 @@ class logWorker(QtCore.QObject):
                 counts = tdc1_dev.get_counts(self.int_time)
                 b = time.time()
                 self.data_is_logged.emit(counts, dev_mode, self.radio_flags)
-                print('time taken this loop: ' + str(b-a))
+                #print('time taken this loop: ' + str(b-a))
                 if self.active_flag == False:
                     break
         self.thread_finished.emit(tdc1_dev)
@@ -223,22 +224,25 @@ class MainWindow(QMainWindow):
         self.plotSamples = self.samplesSpinbox.value() # Number of data points to plot
         self.offset = self.offsetSpinbox.value()
         self.bin_width = self.resolutionSpinbox.value()
+        self._runtime = self.runtimeSpinbox.value() * 60 # Convert to minutes
 
         # Variables for GUI 'memory'
         self._dev_path_prev = self.devCombobox.currentText()
         self._dev_mode_prev = self.modesCombobox.currentText()
         self.integration_time_prev = self.integration_time
         self.plotSamples_prev = self.plotSamples
-        self.startChannel_prev = self.channelsCombobox1.currentText()
-        self.stopChannel_prev = self.channelsCombobox2.currentText()
-        self.offset_prev = self.offsetSpinbox.text()
-        self.bin_width_prev = self.resolutionSpinbox.text()
+        self._ch_start_prev = self._ch_start
+        self._ch_stop_prev = self._ch_stop
+        self.offset_prev = self.offset
+        self.bin_width_prev = self.bin_width
+        self._runtime_prev = self._runtime
 
         self._plot_tab = self.tabs.currentIndex()  # Counts graph = 0, Coincidences graph = 1
         self.idx = min(len(self.y1), self.plotSamples)  # Index for plotting
         self._singles_plotted = False
         self._pairs_plotted = False
         self._data_plotted = self._singles_plotted or self._pairs_plotted
+        self.runtimeCheck = self.runtime_Checkbox.isChecked()
         
 
     def initUI(self):
@@ -282,6 +286,9 @@ class MainWindow(QMainWindow):
         self.radio4_Button.toggled.connect(lambda: self.displayPlot4(self.radio4_Button))
         self.radio4_Button.setEnabled(False)
 
+        self.runtime_Checkbox = QCheckBox("Timer?")
+        #self.runtime_Checkbox.stateChanged.connect(self.updateRuntimeSelection)
+
         self.clearSinglesData_Button = QtWidgets.QPushButton("Clear Data", self)
         self.clearSinglesData_Button.clicked.connect(self.clearSinglesData)
 
@@ -320,6 +327,10 @@ class MainWindow(QMainWindow):
         self.pairsRateLabel.setStyleSheet("font-size: 64px")
         self.pairsRateLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.resolutionTextLabel = QtWidgets.QLabel("Bin Width:", self)
+
+        self.runtimeLabel = QtWidgets.QLabel("Total Runtime (mins):", self)
+        self.countdownLabel = QtWidgets.QLabel("00:00:00", self)
+        self.countdownLabel.setStyleSheet("color: gray; font-size: 24px")
         #---------Labels---------#
 
 
@@ -378,6 +389,13 @@ class MainWindow(QMainWindow):
         self.resolutionSpinbox.setValue(2) # Default 2 ns bin width
         self.resolutionSpinbox.valueChanged.connect(self.updateBinwidth)
         self.resolutionSpinbox.setEnabled(False)
+
+        self.runtimeSpinbox = QSpinBox(self)
+        self.runtimeSpinbox.setRange(0, 65535)
+        self.runtimeSpinbox.setKeyboardTracking(False)
+        self.runtimeSpinbox.setValue(5) # Default 5 mins
+        self.runtimeSpinbox.valueChanged.connect(self.updateRuntime)
+        self.runtimeSpinbox.setEnabled(False)
         #---------Interactive Fields---------#
 
 
@@ -401,8 +419,6 @@ class MainWindow(QMainWindow):
         self.binsize = 2 # nanoseconds
         self.x0 = np.arange(0, self.bins*self.binsize, self.binsize)
         self.y0 = np.zeros_like(self.x0)
-        #self.x0new = []
-        #self.y0new = []
         
         font = QtGui.QFont("Arial", 24)     
         labelStyle = '<span style=\"color:black;font-size:25px\">'
@@ -422,7 +438,7 @@ class MainWindow(QMainWindow):
         self.tdcPlot2 = pg.PlotWidget(title = "Coincidences Histogram")
         self.tdcPlot2.setBackground('w')
         self.tdcPlot2.setLabel('left', labelStyle + 'Coincidences')
-        self.tdcPlot2.setLabel('bottom', labelStyle + 'Time Delay')
+        self.tdcPlot2.setLabel('bottom', labelStyle + 'Time Delay (ns)')
         self.tdcPlot2.getAxis('left').tickFont = font
         self.tdcPlot2.getAxis('bottom').tickFont = font
         self.tdcPlot2.getAxis('bottom').setPen(color='k')
@@ -446,9 +462,13 @@ class MainWindow(QMainWindow):
         self.linePlots = [self.linePlot1, self.linePlot2, self.linePlot3, self.linePlot4]
         #---------PLOTS---------#
 
-        
+        # Timer
+        self.timer = QtCore.QTimer()
+
         #---------Main Window---------#
-        self.setWindowTitle("TDC-1")    
+        self.setWindowTitle("TDC-1")
+        self.move(0, 0)
+        #self.setWindowState(QtCore.Qt.WindowMaximized)
         #---------Main Window---------#
 
 
@@ -484,16 +504,20 @@ class MainWindow(QMainWindow):
         self.grid.addWidget(self.devCombobox, 0, 1)
         self.grid.addWidget(self.deviceModeLabel, 0, 2)
         self.grid.addWidget(self.modesCombobox, 0, 3, 1, 1)
+        self.grid.addWidget(self.runtimeLabel, 0, 4, 1, 1)
+        self.grid.addWidget(self.runtimeSpinbox, 0, 5, 1, 1)
         self.grid.addWidget(self.integrationLabel, 1, 0)
         self.grid.addWidget(self.integrationSpinBox, 1, 1)
         self.grid.addWidget(self.samplesLabel, 1, 2)
         self.grid.addWidget(self.samplesSpinbox, 1, 3, 1, 1)
+        self.grid.addWidget(self.runtime_Checkbox, 1, 4, 1, 1)
+        self.grid.addWidget(self.countdownLabel, 1, 5, 1, 1)
         self.grid.addWidget(self.liveStart_Button, 2, 0)
         #self.grid.addWidget(self.scanForDevice_Button, 2, 1) # Error opening port.
         self.grid.addWidget(self.selectLogfile_Button, 2, 2)
         self.grid.addWidget(self.logfileLabel, 2, 3)
-        self.grid.addWidget(self.tabs, 4, 0, 5, 4)
-
+        self.grid.addWidget(self.tabs, 4, 0, 5, 6)
+        
         self.singlesGroupbox = QGroupBox('Singles')
         self.singlesLayout = QHBoxLayout()
         self.singlesLayout.addWidget(self.radio1_Button)
@@ -610,13 +634,17 @@ class MainWindow(QMainWindow):
         
     # TDC1 object is passed to this slot.
     @QtCore.pyqtSlot('PyQt_PyObject')
-    def closeThreadsAndPorts(self, dev: object):
+    def closethreads_ports_timers(self, dev: object):
         if dev._com.isOpen():
             dev._com.close()
         self.logger = None # Destroy logger
         self.logger_thread = None # and thread...?
         self._tdc1_dev = None # Destroy tdc1_dev object
-        print('logging stopped')
+        #print('logging stopped')
+        #print(f'self._singles_plotted: {self._singles_plotted}')
+        #print(f'self._pairs_plotted: {self._pairs_plotted}')
+        #print(f'self.acq_flag: {self.acq_flag}')
+        self.stopTimer()
 
     # Update plot index on plot tab change
     @QtCore.pyqtSlot()
@@ -647,18 +675,21 @@ class MainWindow(QMainWindow):
     @QtCore.pyqtSlot()
     # Connected to self.liveStart_button.clicked
     def liveStart(self):
-        #print(self._data_plotted)
-        #print(self._pairs_plotted)
-        #print(self.acq_flag)
+        if self.modesCombobox.currentText() == "Select mode":
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setIcon(QtWidgets.QMessageBox.Information)
+            msgBox.setText('Please select a GUI mode.')
+            msgBox.setWindowTitle('GUI mode?')
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return
         #If currently live plotting
         if self.acq_flag is True and self.liveStart_Button.text() == "Live Stop":
-            self.acq_flag = False
-            self.logger.active_flag = False # To stop logger from looping
-            self.selectLogfile_Button.setEnabled(True)
-            self.liveStart_Button.setText("Live Start")
-            #QtCore.QTimer.singleShot(1000, self.dummy) # In millseconds
+            self.endRun()
         #If not currently live plotting
         elif self.acq_flag is False and self.liveStart_Button.text() == "Live Start":
+            self.liveStart_Button.setEnabled(False)
+            QtCore.QTimer.singleShot(1000, lambda: self.liveStart_Button.setEnabled(True))
             if self._tdc1_dev == None:
                 self._tdc1_dev = tdc1.TimeStampTDC1(self.devCombobox.currentText())
             self.acq_flag = True
@@ -674,7 +705,7 @@ class MainWindow(QMainWindow):
                         self.resetPairs()
                     else:
                         return
-                elif self.modesCombobox.currentText == 'singles' and self._singles_plotted == True:
+                elif self.modesCombobox.currentText() == 'singles' and self._singles_plotted == True:
                     msgBox = QtWidgets.QMessageBox()
                     msgBox.setIcon(QtWidgets.QMessageBox.Information)
                     msgBox.setText('A Singles plot already exists. Clear the old plot and start anew?')
@@ -689,9 +720,13 @@ class MainWindow(QMainWindow):
             self.modesCombobox.setEnabled(True)
             if self._dev_mode == 'singles':
                 self.enableSinglesOptions()
+                self.resetRadioButtons()
             elif self._dev_mode == 'pairs':
                 self.enablePairsOptions()
             self.liveStart_Button.setText("Live Stop")
+            if self.runtime_Checkbox.isChecked():
+                self._runtime = self.runtimeSpinbox.value()*60
+                self.startTimer()
             self.startLogging()
 
 
@@ -712,12 +747,13 @@ class MainWindow(QMainWindow):
         self.logging_requested.connect(self.logger.log_which_data)
         self.logger.data_is_logged.connect(self.update_data_from_thread)
         self.logger.histogram_logged.connect(self.updateHistogram)
-        self.logger.thread_finished.connect(self.closeThreadsAndPorts)
+        self.logger.thread_finished.connect(self.closethreads_ports_timers)
 
         self.logger.int_time = int(self.integrationSpinBox.text()) * 1e-3 # Convert to seconds
         #self.log_flag = True
         self.logging_requested.emit(self.integration_time, self._logfile_name, self._dev_path, self.log_flag, self._dev_mode, \
             self._tdc1_dev, self._ch_start, self._ch_stop, self.offset, self.bin_width)
+        
 
     @QtCore.pyqtSlot()
     def selectLogfile(self):
@@ -765,6 +801,7 @@ class MainWindow(QMainWindow):
         for i in range(len(radio_flags)):
             if radio_flags[i] == 1:
                 self.linePlots[i].setData(self.x[-self.idx:], self.y_data[i][-self.idx:])
+                #print(f'radio plot {i} updated.')
 
     # Radio button slots (functions)
     @QtCore.pyqtSlot('PyQt_PyObject')
@@ -774,12 +811,14 @@ class MainWindow(QMainWindow):
                 # Possible to clear self.x and self.y1 without disrupting the worker loop?
                 self.updatePlots(self._radio_flags)
                 self.linePlot1.setPen(self.lineStyle1)
-                self.logger.radio_flags[0] = 1
-                self._radio_flags[0] = 1
+                if self.logger:
+                    self.logger.radio_flags[0] = 1
+                    self._radio_flags[0] = 1
             elif b.isChecked() == False:
                 self.linePlot1.setPen(None)
-                self.logger.radio_flags[0] = 0
-                self._radio_flags[0] = 0
+                if self.logger:
+                    self.logger.radio_flags[0] = 0
+                    self._radio_flags[0] = 0
 
     @QtCore.pyqtSlot('PyQt_PyObject')
     def displayPlot2(self, b: QRadioButton):
@@ -787,12 +826,14 @@ class MainWindow(QMainWindow):
             if b.isChecked() == True:
                 self.updatePlots(self._radio_flags)
                 self.linePlot2.setPen(self.lineStyle2)
-                self.logger.radio_flags[1] = 1
-                self._radio_flags[1] = 1
+                if self.logger:
+                    self.logger.radio_flags[1] = 1
+                    self._radio_flags[1] = 1
             elif b.isChecked() == False:
                 self.linePlot2.setPen(None)
-                self.logger.radio_flags[1] = 0
-                self._radio_flags[1] = 0
+                if self.logger:
+                    self.logger.radio_flags[1] = 0
+                    self._radio_flags[1] = 0
 
     @QtCore.pyqtSlot('PyQt_PyObject')
     def displayPlot3(self, b: QRadioButton):
@@ -800,12 +841,14 @@ class MainWindow(QMainWindow):
             if b.isChecked() == True:
                 self.updatePlots(self._radio_flags)
                 self.linePlot3.setPen(self.lineStyle3)
-                self.logger.radio_flags[2] = 1
-                self._radio_flags[2] = 1
+                if self.logger:
+                    self.logger.radio_flags[2] = 1
+                    self._radio_flags[2] = 1
             elif b.isChecked() == False:
                 self.linePlot3.setPen(None)
-                self.logger.radio_flags[2] = 0
-                self._radio_flags[2] = 0
+                if self.logger:
+                    self.logger.radio_flags[2] = 0
+                    self._radio_flags[2] = 0
 
     @QtCore.pyqtSlot('PyQt_PyObject')
     def displayPlot4(self, b: QRadioButton):
@@ -813,12 +856,14 @@ class MainWindow(QMainWindow):
             if b.isChecked():
                 self.updatePlots(self._radio_flags)
                 self.linePlot4.setPen(self.lineStyle4)
-                self.logger.radio_flags[3] = 1
-                self._radio_flags[3] = 1
+                if self.logger:
+                    self.logger.radio_flags[3] = 1
+                    self._radio_flags[3] = 1
             elif b.isChecked() == False:
                 self.linePlot4.setPen(None)
-                self.logger.radio_flags[3] = 0
-                self._radio_flags[3] = 0
+                if self.logger:
+                    self.logger.radio_flags[3] = 0
+                    self._radio_flags[3] = 0
 
     @QtCore.pyqtSlot(str)
     def updateStart(self, channel: str):
@@ -879,6 +924,59 @@ class MainWindow(QMainWindow):
         self.bin_width = bin_width
         self.x0 = np.arange(0, self.bins*self.binsize, bin_width) # Will eventually be overwritten in updateHistogram, but this might help the first cycle.
 
+    @QtCore.pyqtSlot(int)
+    def updateRuntime(self, runtime):
+        runtime_mins = runtime*60
+        self._runtime = runtime_mins
+        if self.logger:
+            self.logger.runtime = runtime_mins
+
+    # @QtCore.pyqtSlot()
+    # def updateRuntimeSelection():
+    #     self.runtimeCheck = self.runtime_Checkbox.isChecked()
+
+    @QtCore.pyqtSlot()
+    def endRun(self):
+        print('end run called')
+        self.liveStart_Button.setEnabled(False)
+        QtCore.QTimer.singleShot(1000, lambda: self.liveStart_Button.setEnabled(True)) # In milliseconds
+        self.acq_flag = False
+        if self.logger:
+            self.logger.active_flag = False
+        self.selectLogfile_Button.setEnabled(True)
+        self.stopTimer()
+        self.liveStart_Button.setText("Live Start")
+
+        
+
+    # Timer
+    def startTimer(self):
+        time = self.timer.start(1000)
+        self.timer.timeout.connect(self.updateTimer)
+        print('timer connected')
+    
+    def stopTimer(self):
+        if self.timer.isActive():
+            self.timer.stop()
+            self.timer.timeout.disconnect()
+            print('timer disconnected')
+
+    def updateTimer(self):
+        if self._runtime > 0:
+            self.countdownLabel.setStyleSheet("color: black; font-size: 24px")
+            self._runtime -= 1
+            total_seconds = self._runtime
+            hours = total_seconds // 3600
+            total_seconds = total_seconds - (hours * 3600)
+            minutes = total_seconds // 60
+            seconds = total_seconds - (minutes * 60)
+            self.countdownLabel.setText("{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds)))
+            #print(self._runtime)
+        else:
+            self.countdownLabel.setStyleSheet("color: gray; font-size: 24px")
+            self.endRun()
+
+    # RESETS
     # For future use
     def StrongResetInternalVariables(self):
         self.integration_time = 1
@@ -913,6 +1011,7 @@ class MainWindow(QMainWindow):
         self.samplesSpinbox.setEnabled(True)
         self.liveStart_Button.setEnabled(True)
         self.selectLogfile_Button.setEnabled(True)
+        self.runtimeSpinbox.setEnabled(True)
 
     def disableDevOptions(self):
         self.modesCombobox.setEnabled(False)
@@ -950,12 +1049,15 @@ class MainWindow(QMainWindow):
         self.liveStart_Button.setEnabled(True)
         self.selectLogfile_Button.setEnabled(True)
         self.logfileLabel.setText('')
+        self.resetRadioButtons()
+        self.integrationSpinBox.setValue(1000)
+        self.samplesSpinbox.setValue(501)
+
+    def resetRadioButtons(self):
         self.radio1_Button.setChecked(False)
         self.radio2_Button.setChecked(False)
         self.radio3_Button.setChecked(False)
         self.radio4_Button.setChecked(False)
-        self.integrationSpinBox.setValue(1000)
-        self.samplesSpinbox.setValue(501)
 
     def resetSingles(self):
         self.x=[]

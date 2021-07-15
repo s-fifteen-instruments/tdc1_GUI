@@ -1,6 +1,4 @@
-# sfifteen tdc1 GUI (1.1)
-
-NOTE: Slightly outdated as of 13/7 - README update coming soon. The GUI has been updated to v1.2, with more robust functioning and a couple new buttons. The instructions below still hold in general.
+# sfifteen tdc1 GUI (1.2)
 
 INFO
 
@@ -24,32 +22,52 @@ Open a command-line terminal, go into the repository folder and type
     
 1. Full installation instructions at https://github.com/s-fifteen-instruments/pyS15.
 2. Other python package requirements: numpy, pyqt5, pyqtgraph, datetime, time. Install with pip or preferred mode of installation.
-3. Run tdc1_gui.py with your Python compiler of choice (This GUI was developed in Visual Studio Code with Python 3.9.2 64-bit).
+3. Run tdc1_funcnew.py with your Python compiler of choice (This GUI was developed in Visual Studio Code with Python 3.9.2 64-bit).
 
-![image](https://user-images.githubusercontent.com/52197879/124213246-cecf5f80-db22-11eb-932d-57dfb3ce32bd.png)
+![tdc1 GUI](https://user-images.githubusercontent.com/52197879/125744446-c1e87dc4-7bad-4c2d-92e1-d0aad22e6a4e.png)
+
 
 HOW TO USE
 
 1. Ensure device is connected to PC.
 2. Select Device from drop down menu.
-![select device](https://user-images.githubusercontent.com/52197879/124435473-9db39100-dda7-11eb-9b19-a08d1fb7be4f.png)
+![select device](https://user-images.githubusercontent.com/52197879/125743242-5732c121-e92b-47c1-a0f3-795c76d3afe1.png)
+
 
 3. Select GUI Mode - singles/pairs. (This is NOT equivalent to the TDC1 mode. For instance the pairs mode uses the TDC1's timestamp mode (3) for its g2 calculations. The modes correspond to the graph tabs - singles:counts, pairs:coincidences.)
-![select mode](https://user-images.githubusercontent.com/52197879/124435510-a60bcc00-dda7-11eb-9326-9cf83baca23d.png)
+![select mode](https://user-images.githubusercontent.com/52197879/125743271-b7decbf9-0b53-49d6-9d52-a14b408ac217.png)
+
 
 4. Select a Logfile if logging is desired. It is best to write the data to a new, blank Logfile. Leave field empty if not desired.
-![select logfile](https://user-images.githubusercontent.com/52197879/124435622-bde35000-dda7-11eb-99d3-430c82e42f75.png)
+![select logfile](https://user-images.githubusercontent.com/52197879/125743281-6deff07e-6b41-4577-919f-e1eaf6def9cd.png)
+
 
 5. Select Integration time (singles) / acquisition time (pairs) by pressing the arrows or typing in manually then hitting enter.
-![select int](https://user-images.githubusercontent.com/52197879/124435863-fdaa3780-dda7-11eb-842f-0510d9d63b86.png)
+![select int](https://user-images.githubusercontent.com/52197879/125743293-5a772701-c621-4e8d-826e-7f4b92b341b7.png)
+
 
 6. Select Plot Samples. This determines how many data points to display on the graph at once.
-![select PLS](https://user-images.githubusercontent.com/52197879/124435788-e703e080-dda7-11eb-976e-f341aad22fca.png)
+![select PLS](https://user-images.githubusercontent.com/52197879/125743318-82824e87-a36e-49c5-a2dc-a6a3dd8249d2.png)
 
-7. Hit 'Live Start' button.
-8. If in Singles mode, select the respective radio buttons to see the plots. 
-9. If in Pairs mode, select start and stop channel (Default Start:1, Stop:3), histogram bin width.
-10. If in pairs mode, switch to the 'coincidences' tab to view the histogram. The value in the 'Center' spin box allows you to set the center of the histogram display if you already have a rough idea of the expected time delays in your experimental setup.
+7. The timer checkbox can be selected for a finite experiment runtime.
+![select timer](https://user-images.githubusercontent.com/52197879/125743523-d6fb2db6-9a5b-4685-8c38-4306e65c1348.png)
+
+
+8. Hit 'Live Start' button.
+9. If in Singles mode, select the respective radio buttons to see the plots.
+![select singles](https://user-images.githubusercontent.com/52197879/125743782-23614597-6510-447f-aa90-b8ac12c0d554.png)
+
+
+10. If in Pairs mode, select start and stop channel (Default Start:1, Stop:3), histogram bin width.
+![Select pairs](https://user-images.githubusercontent.com/52197879/125743807-aa69677b-c575-46ae-8f92-dc42a3dd29a2.png)
+
+11. If in pairs mode, switch to the 'coincidences' tab to view the histogram. The value in the 'Stop Ch offset' spinbox allows you to set a software delay for coincidence counting.
 ![image](https://user-images.githubusercontent.com/52197879/124213839-da6f5600-db23-11eb-8de3-9a1dae546236.png)
-11. Use mouse to interact with the graph - Click and drag to pan, scroll to zoom, right click for more viewing options.
-12. The GUI is under continual development and may bug out if certain buttons are clicked too many times or clicked in unexpected order. Please report any errors to the contact addresses listed at the top of this README. Meanwhile, simply closing and restarting the GUI should fix the errors. These are usually due to certain background flags that have not been set to the right state. Restarting the GUI sets all the flags to their default state and you may begin again from a clean slate.
+
+12. Use mouse to interact with the graph - Click and drag to pan, scroll to zoom, right click for more viewing options.
+13. Right clicking on the graph and clicking on 'export...' brings up an options window for exporting the graph.
+![export options](https://user-images.githubusercontent.com/52197879/125744126-8405c494-2602-48dc-b9ad-fd294ba0b8f3.png)
+
+14. To begin a new round of data collection, click the 'Clear Data' button on the respective graphs.
+
+15. The GUI is under continual development and may bug out if certain buttons are clicked too many times or clicked in unexpected order. Please report any errors to the contact addresses listed at the top of this README. Meanwhile, simply closing and restarting the GUI should fix the errors. These are usually due to certain background flags that have not been set to the right state. Restarting the GUI sets all the flags to their default state and you may begin again from a clean slate.

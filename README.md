@@ -62,7 +62,7 @@ HOW TO USE
 ![Select pairs](https://user-images.githubusercontent.com/52197879/125743807-aa69677b-c575-46ae-8f92-dc42a3dd29a2.png)
 
 11. If in pairs mode, switch to the 'coincidences' tab to view the histogram. The value in the 'Stop Ch offset' spinbox allows you to set a software delay for coincidence counting.
-![image](https://user-images.githubusercontent.com/52197879/124213839-da6f5600-db23-11eb-8de3-9a1dae546236.png)
+![Select offset](https://user-images.githubusercontent.com/52197879/125745117-5d8c192d-4a1c-4276-bdef-033a74c79454.png)
 
 12. Use mouse to interact with the graph - Click and drag to pan, scroll to zoom, right click for more viewing options.
 13. Right clicking on the graph and clicking on 'export...' brings up an options window for exporting the graph.

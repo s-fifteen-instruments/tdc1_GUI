@@ -55,7 +55,7 @@ class logWorker(QtCore.QObject):
         QtCore (QObject): [description]
     """
     # Worker Signals
-    data_is_logged = QtCore.pyqtSignal(tuple, str, list)
+    data_is_logged = QtCore.pyqtSignal(float, float, tuple, str, list)
     histogram_logged = QtCore.pyqtSignal(dict, int, int)
     coincidences_data_logged = QtCore.pyqtSignal('PyQt_PyObject') # Replace 'PyQt_PyObject' with object?
     thread_finished = QtCore.pyqtSignal('PyQt_PyObject')
@@ -110,7 +110,9 @@ class logWorker(QtCore.QObject):
             while self.active_flag == True:
                 counts = tdc1_dev.get_counts(self.int_time)
                 now = time.time()
-                self.data_is_logged.emit(counts, dev_mode, self.radio_flags)
+                print(start)
+                print(now)
+                self.data_is_logged.emit(start, now, counts, dev_mode, self.radio_flags)
                 with open(file_name, 'a+') as f:
                     # Organising data into pairs
                     time_data: str = datetime.now().isoformat()
@@ -120,10 +122,11 @@ class logWorker(QtCore.QObject):
                     break
         elif log_flag == False:
             while self.active_flag == True:
-                a = time.time()
+                #a = time.time()
                 counts = tdc1_dev.get_counts(self.int_time)
-                b = time.time()
-                self.data_is_logged.emit(counts, dev_mode, self.radio_flags)
+                now = time.time()
+                #b = time.time()
+                self.data_is_logged.emit(start, now, counts, dev_mode, self.radio_flags)
                 #print('time taken this loop: ' + str(b-a))
                 if self.active_flag == False:
                     break
@@ -146,7 +149,7 @@ class logWorker(QtCore.QObject):
             while self.active_flag == True:
                 coincidences = tdc1_dev.count_g2(self.int_time)
                 now = time.time()
-                self.data_is_logged.emit(coincidences, dev_mode, self.radio_flags)
+                self.data_is_logged.emit(start, now, coincidences, dev_mode, self.radio_flags)
                 with open(file_name, 'a+') as f:
                     # Organising data into pairs
                     time_data: str = datetime.now().isoformat()
@@ -158,7 +161,7 @@ class logWorker(QtCore.QObject):
             while self.active_flag == True:
                 coincidences = tdc1_dev.get_counts_and_coincidences(self.int_time)
                 now = time.time()
-                self.data_is_logged.emit(coincidences, dev_mode, self.radio_flags)
+                self.data_is_logged.emit(start, now, coincidences, dev_mode, self.radio_flags)
                 if self.active_flag == False:
                         break
         self.thread_finished.emit(tdc1_dev)
@@ -447,7 +450,7 @@ class MainWindow(QMainWindow):
         self.tdcPlot = pg.PlotWidget(title = "Counts Graph")
         self.tdcPlot.setBackground('w')
         self.tdcPlot.setLabel('left', labelStyle + 'Counts')
-        self.tdcPlot.setLabel('bottom', labelStyle + 'Sample Number')
+        self.tdcPlot.setLabel('bottom', labelStyle + 'Time (s)')
         self.tdcPlot.getAxis('left').tickFont = font
         self.tdcPlot.getAxis('bottom').tickFont = font
         self.tdcPlot.getAxis('bottom').setPen(color='k')
@@ -795,26 +798,27 @@ class MainWindow(QMainWindow):
 
     # Updating data
     # Connected to data_is_logged signal
-    @QtCore.pyqtSlot(tuple, str, list)
-    def update_data_from_thread(self, data: tuple, dev_mode: str, radio_flags: list):
+    @QtCore.pyqtSlot(float, float, tuple, str, list)
+    def update_data_from_thread(self, start: float, now: float, data: tuple, dev_mode: str, radio_flags: list):
+        next_time = now-start
         if len(self.x) == PLT_SAMPLES:
             self.x = self.x[1:]
-            self.x.append(self.x[-1] + 1)
+            self.x.append(next_time)
             self.y1 = self.y1[1:]; self.y2 = self.y2[1:]; self.y3 = self.y3[1:]; self.y4 = self.y4[1:]
         else:
-            self.x.append(len(self.x) + 1) # Takes care of empty list case as well
-        self.y1.append(data[0]); self.y2.append(data[1]); self.y3.append(data[2]); self.y4.append(data[3])
-        self.idx = min(len(self.y1), self.plotSamples)
-        self.y1new = self.y1[-self.idx:]; self.y2new = self.y2[-self.idx:]; self.y3new = self.y3[-self.idx:]; self.y4new = self.y4[-self.idx:]
-        self.y_data = [self.y1new, self.y2new, self.y3new, self.y4new]
-        self._radio_flags = radio_flags
-        self.Ch1CountsLabel.setText(str(data[0]))
-        self.Ch2CountsLabel.setText(str(data[1]))
-        self.Ch3CountsLabel.setText(str(data[2]))
-        self.Ch4CountsLabel.setText(str(data[3]))
-        self._singles_plotted = True
-        self._data_plotted = self._singles_plotted or self._pairs_plotted
-        self.updatePlots(self._radio_flags)
+            self.x.append(next_time)
+            self.y1.append(data[0]); self.y2.append(data[1]); self.y3.append(data[2]); self.y4.append(data[3])
+            self.idx = min(len(self.y1), self.plotSamples)
+            self.y1new = self.y1[-self.idx:]; self.y2new = self.y2[-self.idx:]; self.y3new = self.y3[-self.idx:]; self.y4new = self.y4[-self.idx:]
+            self.y_data = [self.y1new, self.y2new, self.y3new, self.y4new]
+            self._radio_flags = radio_flags
+            self.Ch1CountsLabel.setText(str(data[0]))
+            self.Ch2CountsLabel.setText(str(data[1]))
+            self.Ch3CountsLabel.setText(str(data[2]))
+            self.Ch4CountsLabel.setText(str(data[3]))
+            self._singles_plotted = True
+            self._data_plotted = self._singles_plotted or self._pairs_plotted
+            self.updatePlots(self._radio_flags)
     
     # Updating plots 1-4
     def updatePlots(self, radio_flags: list):

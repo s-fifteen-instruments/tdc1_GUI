@@ -86,14 +86,13 @@ class logWorker(QtCore.QObject):
             print('initiating singles log...')
             self.log_counts_data(file_name, \
         device_path, log_flag, dev_mode, tdc1_dev)
-        elif dev_mode == 'pairs':
-            print('initiating pairs log...')
-            
+        elif dev_mode == 'g2':
+            print('initiating g2 log...')
             self.log_g2(file_name, device_path, log_flag, dev_mode, \
                 tdc1_dev)
-        elif dev_mode == 'timestamp':
-            print('initiating timestamp log')
-            self.log_timestamp_data(file_name, \
+        elif dev_mode == 'pairs':
+            print('initiating pairs log')
+            self.log_coincidences_data(file_name, \
         device_path, log_flag, dev_mode, tdc1_dev)
 
     def log_counts_data(self, file_name: str, device_path: str, log_flag: bool, \
@@ -110,8 +109,6 @@ class logWorker(QtCore.QObject):
             while self.active_flag == True:
                 counts = tdc1_dev.get_counts(self.int_time)
                 now = time.time()
-                print(start)
-                print(now)
                 self.data_is_logged.emit(start, now, counts, dev_mode, self.radio_flags)
                 with open(file_name, 'a+') as f:
                     # Organising data into pairs
@@ -147,7 +144,7 @@ class logWorker(QtCore.QObject):
                 f = open(file_name, 'w')
                 f.write('#time_stamp,coincidences\n')
             while self.active_flag == True:
-                coincidences = tdc1_dev.count_g2(self.int_time)
+                coincidences = tdc1_dev.get_counts_and_coincidences(self.int_time)
                 now = time.time()
                 self.data_is_logged.emit(start, now, coincidences, dev_mode, self.radio_flags)
                 with open(file_name, 'a+') as f:
@@ -225,7 +222,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         self._tdc1_dev = None  # tdc1 device object
-        self._dev_mode = '' # 0 = 'singles', 1 = 'pairs', 3 = 'timestamp'
+        self._dev_mode = '' # 'singles', 'pairs', 'g2'
         self._dev_path = '' # Device path, eg. 'COM4'
         self._open_ports = []
         self._dev_selected = False
@@ -372,7 +369,7 @@ class MainWindow(QMainWindow):
         self.devCombobox.addItems(self.dev_list)
         self.devCombobox.currentTextChanged.connect(self.selectDevice)
 
-        _dev_modes = ['singles', 'pairs']
+        _dev_modes = ['singles', 'pairs', 'g2']
         self.modesCombobox = QComboBox(self)
         self.modesCombobox.addItem('Select mode')
         self.modesCombobox.addItems(_dev_modes)
@@ -507,7 +504,7 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.Ch4CountsLabel, 3, 5)
         self.layout.addWidget(self.clearSinglesData_Button, 4, 5)
         self.tab1.setLayout(self.layout)
-        self.tabs.addTab(self.tab1, "Singles")
+        self.tabs.addTab(self.tab1, "Counts")
 
         self.tab2 = QWidget()
         self.layout2 = QGridLayout()
@@ -515,10 +512,9 @@ class MainWindow(QMainWindow):
         self.layout2.addWidget(self.pairsRateLabel, 0, 5)
         self.layout2.addWidget(self.clearPairsData_Button, 4, 5)
         self.tab2.setLayout(self.layout2)
-        self.tabs.addTab(self.tab2, "Pairs")
+        self.tabs.addTab(self.tab2, "g2")
         self.tabs.currentChanged.connect(self.update_plot_tab)
         #---------Tabs---------#
-
 
         #Layout
         self.grid = QGridLayout()
@@ -541,16 +537,16 @@ class MainWindow(QMainWindow):
         self.grid.addWidget(self.logfileLabel, 2, 3)
         self.grid.addWidget(self.tabs, 4, 0, 5, 6)
         
-        self.singlesGroupbox = QGroupBox('Singles')
+        self.countsGroupbox = QGroupBox('Counts')
         self.singlesLayout = QHBoxLayout()
         self.singlesLayout.addWidget(self.radio1_Button)
         self.singlesLayout.addWidget(self.radio2_Button)
         self.singlesLayout.addWidget(self.radio3_Button)
         self.singlesLayout.addWidget(self.radio4_Button)
-        self.singlesGroupbox.setLayout(self.singlesLayout)
-        self.grid.addWidget(self.singlesGroupbox, 3, 0, 1, 2)
+        self.countsGroupbox.setLayout(self.singlesLayout)
+        self.grid.addWidget(self.countsGroupbox, 3, 0, 1, 2)
 
-        self.pairsGroupbox = QGroupBox('Pairs')
+        self.pairsGroupbox = QGroupBox('g2')
         self.pairsSpinLayout = QHBoxLayout()
         self.pairsSpinLayout.addWidget(self.startChannelLabel)
         self.pairsSpinLayout.addWidget(self.channelsCombobox1)
@@ -628,28 +624,38 @@ class MainWindow(QMainWindow):
                 self.resetGUIelements()
                 if self._tdc1_dev == None:
                     self._tdc1_dev = tdc1.TimeStampTDC1(self._dev_path)
-                self._tdc1_dev.mode = newMode # Setting tdc1 mode with @setter
+                if newMode == 'g2':
+                    self._tdc1_dev.mode = 'timestamp'
+                else:
+                    self._tdc1_dev.mode = newMode # Setting tdc1 mode with @setter
                 self._dev_mode = newMode
                 print(f'Device at {self._dev_path} is now in {self._dev_mode} mode')
             elif returnValue == QMessageBox.Cancel:
                 self.modesCombobox.setCurrentText(self._dev_mode_prev)
             if self.modesCombobox.currentText() == 'singles':
                 self.enableSinglesOptions()
-                self.disablePairsOptions()
-            elif self.modesCombobox.currentText() == 'pairs':
-                self.enablePairsOptions()
+                self.disableg2Options()
+            elif self.modesCombobox.currentText() == 'g2':
+                self.enableg2Options()
                 self.disableSinglesOptions()
         elif self._dev_selected == True and self.acq_flag == False and self._data_plotted == False:
             self.resetGUIelements()
             if self.modesCombobox.currentText() == 'singles':
                 self.enableSinglesOptions()
-                self.disablePairsOptions()
-            elif self.modesCombobox.currentText() == 'pairs':
-                self.enablePairsOptions()
+                self.disableg2Options()
+            elif self.modesCombobox.currentText() == 'g2':
+                self.enableg2Options()
                 self.disableSinglesOptions()
+            elif self.modesCombobox.currentText() == 'pairs':
+                self.disableg2Options()
+                self.disableSinglesOptions()
+                self.enableSinglesOptions()
             if self._tdc1_dev == None:
                     self._tdc1_dev = tdc1.TimeStampTDC1(self._dev_path)
-            self._tdc1_dev.mode = newMode
+            if newMode == 'g2':
+                self._tdc1_dev.mode = 'timestamp'
+            else:
+                self._tdc1_dev.mode = newMode
             self._dev_mode = newMode
             print(f'Device at {self._dev_path} is now in {self._dev_mode} mode')
         elif self._dev_selected == False:
@@ -717,11 +723,11 @@ class MainWindow(QMainWindow):
                 self._tdc1_dev = tdc1.TimeStampTDC1(self.devCombobox.currentText())
             self.acq_flag = True
             if self._data_plotted == True:
-                if self.modesCombobox.currentText() == 'pairs' and self._pairs_plotted == True:
+                if self.modesCombobox.currentText() == 'g2' and self._pairs_plotted == True:
                     msgBox = QtWidgets.QMessageBox()
                     msgBox.setIcon(QtWidgets.QMessageBox.Information)
-                    msgBox.setText('A Pairs plot already exists. Clear the old plot and start anew?')
-                    msgBox.setWindowTitle('Existing Pairs Plot')
+                    msgBox.setText('A g2 plot already exists. Clear the old plot and start anew?')
+                    msgBox.setWindowTitle('Existing g2 Plot')
                     msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
                     returnValue = msgBox.exec()
                     if returnValue == QMessageBox.Ok:
@@ -739,13 +745,24 @@ class MainWindow(QMainWindow):
                         self.resetSingles()
                     else:
                         return
+                elif self.modesCombobox.currentText() == 'pairs' and self._singles_plotted == True:
+                    msgBox = QtWidgets.QMessageBox()
+                    msgBox.setIcon(QtWidgets.QMessageBox.Information)
+                    msgBox.setText('A pairs plot already exists. Clear the old plot and start anew?')
+                    msgBox.setWindowTitle('Existing Pairs Plot')
+                    msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                    returnValue = msgBox.exec()
+                    if returnValue == QMessageBox.Ok:
+                        self.resetSingles()
+                    else:
+                        return
             self.selectLogfile_Button.setEnabled(False)
             self.modesCombobox.setEnabled(True)
-            if self._dev_mode == 'singles':
+            if self._dev_mode == 'singles' or self._dev_mode == 'pairs':
                 self.enableSinglesOptions()
                 self.resetRadioButtons()
-            elif self._dev_mode == 'pairs':
-                self.enablePairsOptions()
+            elif self._dev_mode == 'g2':
+                self.enableg2Options()
             self.liveStart_Button.setText("Live Stop")
             if self.runtime_Checkbox.isChecked():
                 self._runtime = self.runtimeSpinbox.value()*60
@@ -793,6 +810,7 @@ class MainWindow(QMainWindow):
                     self.selectLogfile_Button.setText('Unselect Logfile')
             elif self.selectLogfile_Button.text() == 'Unselect Logfile':
                 self.logfileLabel.setText('')
+                self._logfile_name = ''
                 self.selectLogfile_Button.setText('Select Logfile')
 
 
@@ -967,8 +985,8 @@ class MainWindow(QMainWindow):
         self.acq_flag = False
         if self.logger:
             self.logger.active_flag = False
-        self.selectLogfile_Button.setEnabled(True)
         self.stopTimer()
+        self.selectLogfile_Button.setEnabled(True)
         self.liveStart_Button.setText("Live Start")
 
         
@@ -1012,7 +1030,7 @@ class MainWindow(QMainWindow):
             print('TDC1 object not yet created.')
         finally:
             self._tdc1_dev = None  # tdc1 device object
-            self._dev_mode = '' # 0 = 'singles', 1 = 'pairs', 3 = 'timestamp'
+            self._dev_mode = ''
             self._dev_path = '' # Device path, eg. 'COM4'
 
     def WeakResetInternalVariables(self):
@@ -1056,13 +1074,13 @@ class MainWindow(QMainWindow):
         self.radio3_Button.setEnabled(False)
         self.radio4_Button.setEnabled(False)
 
-    def enablePairsOptions(self):
+    def enableg2Options(self):
         self.channelsCombobox1.setEnabled(True)
         self.channelsCombobox2.setEnabled(True)
         self.offsetSpinbox.setEnabled(True)
         self.resolutionSpinbox.setEnabled(True)
 
-    def disablePairsOptions(self):
+    def disableg2Options(self):
         self.channelsCombobox1.setEnabled(False)
         self.channelsCombobox2.setEnabled(False)
         self.offsetSpinbox.setEnabled(False)
@@ -1073,6 +1091,7 @@ class MainWindow(QMainWindow):
         self.liveStart_Button.setEnabled(True)
         self.selectLogfile_Button.setEnabled(True)
         self.logfileLabel.setText('')
+        self.selectLogfile_Button.setText('Select Logfile')
         self.resetRadioButtons()
         self.integrationSpinBox.setValue(1000)
         self.samplesSpinbox.setValue(501)
@@ -1100,7 +1119,7 @@ class MainWindow(QMainWindow):
         self.linePlot4.setData(self.x, self.y4)
         self._singles_plotted = False
         self._data_plotted = self._singles_plotted or self._pairs_plotted
-        self.logfileLabel = ''
+        # self.logfileLabel.setText('')
 
     def resetPairs(self):
         self.x0=np.arange(0, self.bins*self.binsize, self.binsize)
@@ -1115,7 +1134,7 @@ class MainWindow(QMainWindow):
         self._radio_flags = [0,0,0,0]
         self._pairs_plotted = False
         self._data_plotted = self._singles_plotted or self._pairs_plotted
-        self.logfileLabel = ''
+        # self.logfileLabel.setText('')
 
     def resetDataAndPlots(self):
         self.resetSingles()

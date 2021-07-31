@@ -1,5 +1,7 @@
 # sfifteen tdc1 GUI (1.2)
 
+GUI UPDATED v1.3 31/7/21: Added ability to log counts and coincidences (TDC1 mode 1) to a logfile under pairs mode. Renamed previous pairs mode to g2 mode. Readme update coming soon. Information below is still mostly accurate with some small changes.
+
 INFO
 
 1. This program is a Graphical User Interface (GUI) for s-fifteen intruments' TDC1 Timestamp Device https://s-fifteen.com/products/timestamp.

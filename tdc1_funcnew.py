@@ -243,6 +243,7 @@ class MainWindow(QMainWindow):
         self._tdc1_dev = None  # tdc1 device object
         self._dev_mode = '' # 'singles', 'pairs', 'g2'
         self._dev_path = '' # Device path, eg. 'COM4'
+        self._level = '' # 'NIM', 'TTL'
         self._open_ports = []
         self._dev_selected = False
         self.dev_list = []
@@ -268,6 +269,7 @@ class MainWindow(QMainWindow):
         # Variables for GUI 'memory'
         self._dev_path_prev = self.devCombobox.currentText()
         self._dev_mode_prev = self.modesCombobox.currentText()
+        self._level_prev = self.levelsComboBox.currentText()
         self.integration_time_prev = self.integration_time
         self.plotSamples_prev = self.plotSamples
         self._ch_start_prev = self._ch_start
@@ -373,6 +375,8 @@ class MainWindow(QMainWindow):
         self.runtimeLabel = QtWidgets.QLabel("Total Runtime (mins):", self)
         self.countdownLabel = QtWidgets.QLabel("00:00:00", self)
         self.countdownLabel.setStyleSheet("color: gray; font-size: 24px")
+
+        self.levelsLabel = QtWidgets.QLabel("NIM/TTL:",self)
         #---------Labels---------#
 
 
@@ -442,6 +446,13 @@ class MainWindow(QMainWindow):
         self.runtimeSpinbox.setValue(5) # Default 5 mins
         self.runtimeSpinbox.valueChanged.connect(self.updateRuntime)
         self.runtimeSpinbox.setEnabled(False)
+
+        _levels = ['NIM (-0.5V)', 'TTL (+1.6V)']
+        self.levelsComboBox = QComboBox(self)
+        self.channelsCombobox2.addItem('Select')
+        self.levelsComboBox.addItems(_levels)
+        self.levelsComboBox.currentTextChanged.connect(self.updateLevel)
+        self.levelsComboBox.setEnabled(False)
         #---------Interactive Fields---------#
 
 
@@ -548,12 +559,11 @@ class MainWindow(QMainWindow):
         self.grid.addWidget(self.runtimeSpinbox, 0, 5, 1, 1)
         self.grid.addWidget(self.integrationLabel, 1, 0)
         self.grid.addWidget(self.integrationSpinBox, 1, 1)
-        self.grid.addWidget(self.samplesLabel, 1, 2)
-        self.grid.addWidget(self.samplesSpinbox, 1, 3, 1, 1)
+        self.grid.addWidget(self.levelsLabel, 1, 2)
+        self.grid.addWidget(self.levelsComboBox, 1, 3, 1, 1)
         self.grid.addWidget(self.runtime_Checkbox, 1, 4, 1, 1)
         self.grid.addWidget(self.countdownLabel, 1, 5, 1, 1)
         self.grid.addWidget(self.liveStart_Button, 2, 0)
-        #self.grid.addWidget(self.scanForDevice_Button, 2, 1) # Error opening port.
         self.grid.addWidget(self.selectLogfile_Button, 2, 2)
         self.grid.addWidget(self.logfileText, 2, 3)
         self.grid.addWidget(self.tabs, 4, 0, 5, 6)
@@ -585,6 +595,9 @@ class MainWindow(QMainWindow):
         self.pairsLayout.addLayout(self.pairsCenterLayout)
         self.pairsGroupbox.setLayout(self.pairsLayout)
         self.grid.addWidget(self.pairsGroupbox, 3, 2, 1, 2)
+
+        self.grid.addWidget(self.samplesLabel, 3, 4)
+        self.grid.addWidget(self.samplesSpinbox, 3, 5)
 
         #Main Widget (on which the grid is to be implanted)
         self.mainwidget = QWidget()
@@ -646,6 +659,7 @@ class MainWindow(QMainWindow):
                 self.selectLogfile_Button.setText('Select Logfile')
                 self.logfileText.setText('')
                 self.log_flag = False
+                self.acq_flag = False
                 if self._tdc1_dev == None:
                     self._tdc1_dev = tdc1.TimeStampTDC1(self._dev_path)
                 if newMode == 'g2':
@@ -680,14 +694,15 @@ class MainWindow(QMainWindow):
         
     @QtCore.pyqtSlot('PyQt_PyObject')
     def closethreads_ports_timers(self, dev):
-        if dev._com.isOpen():
-            dev._com.close()
-        self.logger = None # Destroy logger
-        self.logger_thread = None # and thread...?
-        self._tdc1_dev = None # Destroy tdc1_dev object
+        # if dev._com.isOpen():
+        #     dev._com.close()
+        # self.logger = None # Destroy logger
+        # self.logger_thread = None # and thread...?
+        # self._tdc1_dev = None # Destroy tdc1_dev object
         self.stopTimer()
         self.acq_flag = False
         self.modesCombobox.setEnabled(True)
+        self.levelsComboBox.setEnabled(True)
         self.devCombobox.setEnabled(True)
         self.runtimeSpinbox.setEnabled(True)
         self.runtime_Checkbox.setEnabled(True)
@@ -695,21 +710,22 @@ class MainWindow(QMainWindow):
         self.liveStart_Button.setText("Live Start")
 
     @QtCore.pyqtSlot('PyQt_PyObject')
-    def closethreads_ports_timers2(self, dev):
+    def closethreads_ports_timers_logs(self, dev):
         msgBox = QtWidgets.QMessageBox()
         msgBox.setIcon(QtWidgets.QMessageBox.Critical)
         msgBox.setText('Ensure logfile is not open in another program.')
         msgBox.setWindowTitle('Permission Error')
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec()
-        if dev._com.isOpen():
-            dev._com.close()
-        self.logger = None # Destroy logger
-        self.logger_thread = None # and thread...?
-        self._tdc1_dev = None # Destroy tdc1_dev object
+        # if dev._com.isOpen():
+        #     dev._com.close()
+        # self.logger = None # Destroy logger
+        # self.logger_thread = None # and thread...?
+        # self._tdc1_dev = None # Destroy tdc1_dev object
         self.stopTimer()
         self.acq_flag = False
         self.modesCombobox.setEnabled(True)
+        self.levelsComboBox.setEnabled(True)
         self.devCombobox.setEnabled(True)
         self.runtimeSpinbox.setEnabled(True)
         self.runtime_Checkbox.setEnabled(True)
@@ -756,15 +772,16 @@ class MainWindow(QMainWindow):
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
             return
-        #If currently live plotting
+        #If currently live plotting, pressing the button stops plotting
         if self.acq_flag is True and self.liveStart_Button.text() == "Live Stop":
             self.endRun()
             self.modesCombobox.setEnabled(True)
+            self.levelsComboBox.setEnabled(True)
             self.devCombobox.setEnabled(True)
             self.runtimeSpinbox.setEnabled(True)
             self.runtime_Checkbox.setEnabled(True)
             self._tdc1_dev._com.reset_input_buffer()
-        #If not currently live plotting
+        #If not currently live plotting, pressing the button starts plotting
         elif self.acq_flag is False and self.liveStart_Button.text() == "Live Start":
             self.liveStart_Button.setEnabled(False)
             QtCore.QTimer.singleShot(1000, lambda: self.liveStart_Button.setEnabled(True))
@@ -807,6 +824,7 @@ class MainWindow(QMainWindow):
                         return
             self.selectLogfile_Button.setEnabled(False)
             self.modesCombobox.setEnabled(False)
+            self.levelsComboBox.setEnabled(False)
             self.devCombobox.setEnabled(False)
             self.runtimeSpinbox.setEnabled(False)
             self.runtime_Checkbox.setEnabled(False)
@@ -841,7 +859,7 @@ class MainWindow(QMainWindow):
         self.logger.data_is_logged.connect(self.update_data_from_thread)
         self.logger.histogram_logged.connect(self.updateHistogram)
         self.logger.thread_finished.connect(self.closethreads_ports_timers)
-        self.logger.permission_error.connect(self.closethreads_ports_timers2)
+        self.logger.permission_error.connect(self.closethreads_ports_timers_logs)
 
         self.logger.int_time = int(self.integrationSpinBox.text()) * 1e-3 # Convert to seconds
         #self.log_flag = True
@@ -897,8 +915,8 @@ class MainWindow(QMainWindow):
             self._singles_plotted = True
             self._data_plotted = self._singles_plotted or self._pairs_plotted
         elif len(self.x) > self.plotSamples:
-            # If user reduces plot samples to less than already plotted, truncate as requested. First truncate one more data point than requested
-            # since we add one back right after.
+            # If user reduces plot samples to less than already plotted, truncate as requested. We truncate one more data point than requested
+            # since we add the new one right after.
             cutoff_idx = self.plotSamples + 1
             self.x = self.x[-cutoff_idx:]
             self.x.append(next_time)
@@ -915,6 +933,8 @@ class MainWindow(QMainWindow):
                 self.linePlots[i].setData(self.x[-self.idx:], self.y_data[i][-self.idx:])
 
     # Radio button slots (functions)
+
+    # Channel 1 Radio Button Plotting
     @QtCore.pyqtSlot('PyQt_PyObject')
     def displayPlot1(self, b: QRadioButton):
         if b.isChecked() == True:
@@ -930,7 +950,7 @@ class MainWindow(QMainWindow):
             if self.logger:
                 self.logger.radio_flags[0] = 0
                 
-
+    # Channel 2 Radio Button Plotting
     @QtCore.pyqtSlot('PyQt_PyObject')
     def displayPlot2(self, b: QRadioButton):
         if b.isChecked() == True:
@@ -945,6 +965,7 @@ class MainWindow(QMainWindow):
             if self.logger:
                 self.logger.radio_flags[1] = 0
 
+    # Channel 3 Radio Button Plotting
     @QtCore.pyqtSlot('PyQt_PyObject')
     def displayPlot3(self, b: QRadioButton):
         if b.isChecked() == True:
@@ -959,6 +980,7 @@ class MainWindow(QMainWindow):
             if self.logger:
                 self.logger.radio_flags[2] = 0
 
+    # Channel 4 Radio Button Plotting
     @QtCore.pyqtSlot('PyQt_PyObject')
     def displayPlot4(self, b: QRadioButton):
         if b.isChecked() == True:
@@ -990,6 +1012,23 @@ class MainWindow(QMainWindow):
             if self.logger:
                 self.logger.ch_stop = cs
                 print('logger stop channel is now: ' + str(self.logger.ch_stop))
+
+    @QtCore.pyqtSlot(str)
+    def updateLevel(self, level: str):
+        if level == 'TTL (+1.6V)' and self._tdc1_dev:
+            print('entering TTL block')
+            self._level = 'TTL'
+            print('1')
+            self._tdc1_dev.level = 'TTL'
+            print(f'Device at {self._dev_path} is now at {self._level} level')
+        elif level == 'NIM (-0.5V)' and self._tdc1_dev:
+            print('entering NIM block')
+            self._level = 'NIM'
+            print('1')
+            self._tdc1_dev.level = 'NIM'
+            print(f'Device at {self._dev_path} is now at {self._level} level')
+        elif level == 'Select':
+            pass
 
     # Histogram
     # Connected to histogram_logged signal
@@ -1050,8 +1089,10 @@ class MainWindow(QMainWindow):
         self.liveStart_Button.setEnabled(False)
         QtCore.QTimer.singleShot(1000, lambda: self.liveStart_Button.setEnabled(True)) # In milliseconds
         self.acq_flag = False
+        self.log_flag = False
         if self.logger:
             self.logger.active_flag = False
+        self.stopWorkerAndThread()
         self.stopTimer()
         self.selectLogfile_Button.setEnabled(True)
         self.liveStart_Button.setText("Live Start")
@@ -1084,8 +1125,8 @@ class MainWindow(QMainWindow):
             self.countdownLabel.setStyleSheet("color: gray; font-size: 24px")
             self.endRun()
 
-    # RESETS
-    # For future use
+    # RESETS for internal variables
+
     def StrongResetInternalVariables(self):
         self.integration_time = 1
         self._logfile_name = '' # Track the logfile(csv) being used by GUI
@@ -1107,9 +1148,16 @@ class MainWindow(QMainWindow):
         self.log_flag = False
         self.deleteWorkerAndThread()
 
-    def deleteWorkerAndThread(self):
-        #time.sleep(2) # To allow threads to end
+    def stopWorkerAndThread(self):
         QtCore.QTimer.singleShot(1000, self.dummy)
+        if self.logger_thread:
+            if self.logger:
+                self.logger.active_flag = False
+                self.logger_thread.quit()
+                self.logger_thread.wait()
+
+    def deleteWorkerAndThread(self):
+        self.stopWorkerAndThread()
         self.logger = None
         self.logger_thread = None
 
@@ -1117,6 +1165,7 @@ class MainWindow(QMainWindow):
 
     def enableDevOptions(self):
         self.modesCombobox.setEnabled(True)
+        self.levelsComboBox.setEnabled(True)
         self.integrationSpinBox.setEnabled(True)
         self.samplesSpinbox.setEnabled(True)
         self.liveStart_Button.setEnabled(True)
@@ -1125,6 +1174,7 @@ class MainWindow(QMainWindow):
 
     def disableDevOptions(self):
         self.modesCombobox.setEnabled(False)
+        self.levelsComboBox.setEnabled(False)
         self.integrationSpinBox.setEnabled(False)
         self.samplesSpinbox.setEnabled(False)
         self.liveStart_Button.setEnabled(False)
@@ -1265,3 +1315,5 @@ if __name__ == '__main__':
 # Fixed error when choosing integration time < 1000 ms. Logger was receiving floats when it was expecting int. Logger now expects floats.
 # Fixed wrong call to QFileDialog when selecting log file.
 # Minor update to GUI states when selecting GUI modes.
+# Added level selection.
+# Fixed bugs associated with internal states when hitting 'liveStop'.

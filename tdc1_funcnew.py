@@ -81,14 +81,12 @@ class logWorker(QtCore.QObject):
     @QtCore.pyqtSlot(float, str, str, bool, str, object, int, int, int, int)
     def log_which_data(self, int_time: float, file_name: str, device_path: str, log_flag: bool, \
         dev_mode: str, tdc1_dev: object, start: int, stop: int, offset: int, bin_width: int):
-        print(f'log_which_data - int_time is {int_time}')
         self.int_time = int_time
         self.ch_start = start
         self.ch_stop = stop
         self.offset = offset
         self.bin_width = bin_width
         self.active_flag = True
-        print(f'log_which_data - logger called with int_time: {self.int_time}')
         if dev_mode == 'singles':
             print('initiating singles log...')
             self.log_counts_data(file_name, \
@@ -115,8 +113,6 @@ class logWorker(QtCore.QObject):
                 f = open(file_name, 'w')
                 f.write('#time_stamp,counts\n')
             while self.active_flag == True:
-                print(f'log_counts_data - calling get_counts with log')
-                print(f'log_counts_data - self.int_time: {self.int_time}')
                 counts = tdc1_dev.get_counts(self.int_time)
                 now = time.time()
                 self.data_is_logged.emit(start, now, counts, dev_mode, self.radio_flags)
@@ -134,8 +130,6 @@ class logWorker(QtCore.QObject):
         # Else, plot without logging to file
         elif log_flag == False:
             while self.active_flag == True:
-                print(f'log_counts_data - calling get_counts without log')
-                print(f'log_counts_data - self.int_time: {self.int_time}')
                 counts = tdc1_dev.get_counts(self.int_time)
                 now = time.time()
                 self.data_is_logged.emit(start, now, counts, dev_mode, self.radio_flags)
@@ -731,10 +725,8 @@ class MainWindow(QMainWindow):
     @QtCore.pyqtSlot(int)
     def update_intTime(self, int_time: int):
         self.integration_time = int_time * 1e-3
-        print(f'self.integration_time is {self.integration_time} ms')
         if self.logger:
             self.logger.int_time = int_time * 1e-3
-            print(f'self.logger exists. logger int_time is now: {self.logger.int_time} ms')
 
     @QtCore.pyqtSlot(int)
     def updateBins(self, bins: int):
@@ -852,9 +844,7 @@ class MainWindow(QMainWindow):
         self.logger.permission_error.connect(self.closethreads_ports_timers2)
 
         self.logger.int_time = int(self.integrationSpinBox.text()) * 1e-3 # Convert to seconds
-        print(f'startLogging - type of self.integration_time is: {type(self.integration_time)}')
         #self.log_flag = True
-        print(f'startLogging - self.integration_time is : {self.integration_time}')
         self.logging_requested.emit(self.integration_time, self._logfile_name, self._dev_path, self.log_flag, self._dev_mode, \
             self._tdc1_dev, self._ch_start, self._ch_stop, self.offset, self.bin_width)
         
@@ -922,9 +912,7 @@ class MainWindow(QMainWindow):
         for i in range(len(radio_flags)):
             # Only show plots with the Radio button selected
             if radio_flags[i] == 1:
-                print(f'Updating radio plot {i}.')
                 self.linePlots[i].setData(self.x[-self.idx:], self.y_data[i][-self.idx:])
-                print(f'radio plot {i} updated.')
 
     # Radio button slots (functions)
     @QtCore.pyqtSlot('PyQt_PyObject')

@@ -1,6 +1,6 @@
-# sfifteen tdc1 GUI (1.2)
+# sfifteen tdc1 GUI (1.3)
 
-GUI UPDATED v1.3 31/7/21: Added ability to log counts and coincidences (TDC1 mode 1) to a logfile under pairs mode. Renamed previous pairs mode to g2 mode. Readme update coming soon. Information below is still mostly accurate with some small changes.
+GUI UPDATED v1.3 26/5/2022: Fixed Singles plot not plotting past a certain number of data points. Now plots up to 500 data points in Singles mode consistently.
 
 INFO
 
@@ -26,8 +26,7 @@ Open a command-line terminal, go into the repository folder and type
 2. Other python package requirements: numpy, pyqt5, pyqtgraph, datetime, time. Install with pip or preferred mode of installation.
 3. Run tdc1_funcnew.py with your Python compiler of choice (This GUI was developed in Visual Studio Code with Python 3.9.2 64-bit).
 
-![tdc1 GUI](https://user-images.githubusercontent.com/52197879/125744446-c1e87dc4-7bad-4c2d-92e1-d0aad22e6a4e.png)
-
+![image](https://user-images.githubusercontent.com/52197879/170422100-23122dfd-e280-49e3-ac07-c9b82dcaed8d.png)
 
 HOW TO USE
 
@@ -47,8 +46,7 @@ HOW TO USE
 5. Select Integration time (singles) / acquisition time (pairs) by pressing the arrows or typing in manually then hitting enter.
 ![select int](https://user-images.githubusercontent.com/52197879/125743293-5a772701-c621-4e8d-826e-7f4b92b341b7.png)
 
-
-6. Select Plot Samples. This determines how many data points to display on the graph at once.
+6. Select Plot Samples. This determines how many data points to display on the graph at once. Only works for pairs mode. Singles mode plots up to 500 data points by design.
 ![select PLS](https://user-images.githubusercontent.com/52197879/125743318-82824e87-a36e-49c5-a2dc-a6a3dd8249d2.png)
 
 7. The timer checkbox can be selected for a finite experiment runtime.
@@ -66,7 +64,8 @@ HOW TO USE
 11. If in pairs mode, switch to the 'coincidences' tab to view the histogram. The value in the 'Stop Ch offset' spinbox allows you to set a software delay for coincidence counting.
 ![Select offset](https://user-images.githubusercontent.com/52197879/125745117-5d8c192d-4a1c-4276-bdef-033a74c79454.png)
 
-12. Use mouse to interact with the graph - Click and drag to pan, scroll to zoom, right click for more viewing options.
+12. Use mouse to interact with the graph - Click and drag to pan, scroll to zoom, right click for more viewing options. The graph will not auto-scroll if you do this. To return to auto-scroll mode, right click and look for the 'Auto' radio button under the X axis or Y axis context menus. ![image](https://user-images.githubusercontent.com/52197879/170422660-54f87ebe-f94c-4aee-8ac9-7dd43fb80289.png)
+
 13. Right clicking on the graph and clicking on 'export...' brings up an options window for exporting the graph.
 ![export options](https://user-images.githubusercontent.com/52197879/125744126-8405c494-2602-48dc-b9ad-fd294ba0b8f3.png)
 

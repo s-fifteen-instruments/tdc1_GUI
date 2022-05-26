@@ -2,16 +2,16 @@
 
 GUI UPDATED v1.3 26/5/2022: Fixed Singles plot not plotting past a certain number of data points. Now plots up to 500 data points in Singles mode consistently.
 
-INFO
+**INFO**
 
 1. This program is a Graphical User Interface (GUI) for s-fifteen intruments' TDC1 Timestamp Device https://s-fifteen.com/products/timestamp.
 
-CONTACT
+**CONTACT**
 
 1. For any bug reports/suggestions, please contact the developer at info@s-fifteen.com or g3.ganjunherng@gmail.com.
 2. It would be helpful if you included the error messages printed out to the terminal or whatever program that is catching the errors. (Do not worry if you cannot find this.)
 
-INSTALLATION QUICKSTART
+**INSTALLATION QUICKSTART**
 
 Install the S15lib python package directly with
  
@@ -28,7 +28,7 @@ Open a command-line terminal, go into the repository folder and type
 
 ![image](https://user-images.githubusercontent.com/52197879/170422100-23122dfd-e280-49e3-ac07-c9b82dcaed8d.png)
 
-HOW TO USE
+**HOW TO USE**
 
 1. Ensure device is connected to PC.
 2. Select Device from drop down menu.

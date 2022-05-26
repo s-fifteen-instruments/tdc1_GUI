@@ -23,7 +23,7 @@ Open a command-line terminal, go into the repository folder and type
     pip install -e .
     
 1. Full installation instructions at https://github.com/s-fifteen-instruments/pyS15.
-2. Other python package requirements: numpy, pyqt5, pyqtgraph, datetime, time. Install with pip or preferred mode of installation.
+2. Other python package requirements: see file 'requirements.txt'. Install with pip or preferred mode of installation.
 3. Run tdc1_funcnew.py with your Python compiler of choice (This GUI was developed in Visual Studio Code with Python 3.9.2 64-bit).
 
 ![image](https://user-images.githubusercontent.com/52197879/170422100-23122dfd-e280-49e3-ac07-c9b82dcaed8d.png)

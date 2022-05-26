@@ -1,0 +1,7 @@
+# virturl env
+venv
+.venv
+
+# log files
+*.csv
+*.dat

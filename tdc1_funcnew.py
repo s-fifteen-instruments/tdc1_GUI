@@ -16,6 +16,9 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
+#
+# See bottom of file for a brief history of version updates.
+#
 
 
 from os import stat
@@ -75,15 +78,17 @@ class logWorker(QtCore.QObject):
         self.runtime = 0
     
     # Connected to MainWindow.logging_requested
-    @QtCore.pyqtSlot(int, str, str, bool, str, object, int, int, int, int)
-    def log_which_data(self, int_time: int, file_name: str, device_path: str, log_flag: bool, \
+    @QtCore.pyqtSlot(float, str, str, bool, str, object, int, int, int, int)
+    def log_which_data(self, int_time: float, file_name: str, device_path: str, log_flag: bool, \
         dev_mode: str, tdc1_dev: object, start: int, stop: int, offset: int, bin_width: int):
+        print(f'log_which_data - int_time is {int_time}')
         self.int_time = int_time
         self.ch_start = start
         self.ch_stop = stop
         self.offset = offset
         self.bin_width = bin_width
         self.active_flag = True
+        print(f'log_which_data - logger called with int_time: {self.int_time}')
         if dev_mode == 'singles':
             print('initiating singles log...')
             self.log_counts_data(file_name, \
@@ -101,6 +106,7 @@ class logWorker(QtCore.QObject):
         dev_mode: str, tdc1_dev: object):
         start = time.time()
         now = start
+        # If log file is selected and GUI is running, log to file + display counts
         if log_flag == True and self.active_flag == True:
             try:
                 open(file_name)
@@ -109,6 +115,8 @@ class logWorker(QtCore.QObject):
                 f = open(file_name, 'w')
                 f.write('#time_stamp,counts\n')
             while self.active_flag == True:
+                print(f'log_counts_data - calling get_counts with log')
+                print(f'log_counts_data - self.int_time: {self.int_time}')
                 counts = tdc1_dev.get_counts(self.int_time)
                 now = time.time()
                 self.data_is_logged.emit(start, now, counts, dev_mode, self.radio_flags)
@@ -123,8 +131,11 @@ class logWorker(QtCore.QObject):
                     tdc1_dev._com.reset_input_buffer()
                     self.permission_error.emit(tdc1_dev)
                     return
+        # Else, plot without logging to file
         elif log_flag == False:
             while self.active_flag == True:
+                print(f'log_counts_data - calling get_counts without log')
+                print(f'log_counts_data - self.int_time: {self.int_time}')
                 counts = tdc1_dev.get_counts(self.int_time)
                 now = time.time()
                 self.data_is_logged.emit(start, now, counts, dev_mode, self.radio_flags)
@@ -227,7 +238,7 @@ class MainWindow(QMainWindow):
         QMainWindow (QObject): See qt documentation for more info.
     """
     # Send logging parameters to worker method
-    logging_requested = QtCore.pyqtSignal(int, str, str, bool, str, object, int, int, int, int)
+    logging_requested = QtCore.pyqtSignal(float, str, str, bool, str, object, int, int, int, int)
     
     def __init__(self, *args, **kwargs):
         """[summary]
@@ -448,12 +459,7 @@ class MainWindow(QMainWindow):
         self.y2 = []
         self.y3 = []
         self.y4 = []
-        self.xnew = []
-        self.y1new = []
-        self.y2new = []
-        self.y3new = []
-        self.y4new = []
-        self.y_data = [self.y1new, self.y2new, self.y3new, self.y4new]
+        self.y_data = [self.y1, self.y2, self.y3, self.y4]
 
         # Plot 2 - Time difference histogram (Channel cross-correlation)
         self.bins = 501
@@ -650,10 +656,15 @@ class MainWindow(QMainWindow):
                     self._tdc1_dev = tdc1.TimeStampTDC1(self._dev_path)
                 if newMode == 'g2':
                     self._tdc1_dev.mode = 'timestamp'
+                    self.samplesSpinbox.setEnabled(True)
                 else:
                     self._tdc1_dev.mode = newMode # Setting tdc1 mode with @setter
                 self._dev_mode = newMode
                 print(f'Device at {self._dev_path} is now in {self._dev_mode} mode')
+                if newMode == 'singles':
+                    self.samplesSpinbox.setEnabled(False)
+                if newMode == 'pairs':
+                    self.samplesSpinbox.setEnabled(True)
             elif returnValue == QMessageBox.Cancel:
                 self.modesCombobox.setCurrentText(self._dev_mode_prev)
         elif self._dev_selected == True and self.acq_flag == False and self._data_plotted == False:
@@ -661,10 +672,15 @@ class MainWindow(QMainWindow):
                     self._tdc1_dev = tdc1.TimeStampTDC1(self._dev_path)
             if newMode == 'g2':
                 self._tdc1_dev.mode = 'timestamp'
+                self.samplesSpinbox.setEnabled(True)
             else:
                 self._tdc1_dev.mode = newMode
             self._dev_mode = newMode
             print(f'Device at {self._dev_path} is now in {self._dev_mode} mode')
+            if newMode == 'singles':
+                    self.samplesSpinbox.setEnabled(False)
+            if newMode == 'pairs':
+                self.samplesSpinbox.setEnabled(True)
         elif self._dev_selected == False:
             print('Please select a device first')
         
@@ -714,10 +730,11 @@ class MainWindow(QMainWindow):
     # Update integration time on spinbox value change
     @QtCore.pyqtSlot(int)
     def update_intTime(self, int_time: int):
-        # Convert to seconds
         self.integration_time = int_time * 1e-3
+        print(f'self.integration_time is {self.integration_time} ms')
         if self.logger:
             self.logger.int_time = int_time * 1e-3
+            print(f'self.logger exists. logger int_time is now: {self.logger.int_time} ms')
 
     @QtCore.pyqtSlot(int)
     def updateBins(self, bins: int):
@@ -736,7 +753,8 @@ class MainWindow(QMainWindow):
     # Connected to self.liveStart_button.clicked
     def liveStart(self):
         """[summary] Performs start/stop functions depending on button state and internal flags. This function is called when
-           self.liveStart_button is clicked.
+           self.liveStart_button is clicked. Sets all the GUI elements to the right states (hopefully) before issuing a startLogging
+           command which starts the actual data collection.
         """
         if self.modesCombobox.currentText() == "Select mode":
             msgBox = QtWidgets.QMessageBox()
@@ -834,7 +852,9 @@ class MainWindow(QMainWindow):
         self.logger.permission_error.connect(self.closethreads_ports_timers2)
 
         self.logger.int_time = int(self.integrationSpinBox.text()) * 1e-3 # Convert to seconds
+        print(f'startLogging - type of self.integration_time is: {type(self.integration_time)}')
         #self.log_flag = True
+        print(f'startLogging - self.integration_time is : {self.integration_time}')
         self.logging_requested.emit(self.integration_time, self._logfile_name, self._dev_path, self.log_flag, self._dev_mode, \
             self._tdc1_dev, self._ch_start, self._ch_stop, self.offset, self.bin_width)
         
@@ -845,7 +865,7 @@ class MainWindow(QMainWindow):
             if self.selectLogfile_Button.text() == 'Select Logfile':
                 default_filetype = 'csv'
                 start = datetime.now().strftime("%Y%m%d_%Hh%Mm%Ss ") + "_TDC1." + default_filetype
-                self._logfile_name = QtGui.QFileDialog.getSaveFileName(
+                self._logfile_name = QtWidgets.QFileDialog.getSaveFileName(
                     self, "Save to log file", start)[0]
                 self.logfileText.setText(self._logfile_name)
                 if self._logfile_name != '':
@@ -866,15 +886,19 @@ class MainWindow(QMainWindow):
         #print(f'data is {data}')
         next_time = now-start
         if len(self.x) == PLT_SAMPLES:
+            # If hit sample limit, throw out 1st data point before adding new one
             self.x = self.x[1:]
             self.x.append(next_time)
             self.y1 = self.y1[1:]; self.y2 = self.y2[1:]; self.y3 = self.y3[1:]; self.y4 = self.y4[1:]
-        else:
+            self.y1.append(data[0]); self.y2.append(data[1]); self.y3.append(data[2]); self.y4.append(data[3])
+            self.y_data = [self.y1, self.y2, self.y3, self.y4]
+        elif len(self.x) < self.plotSamples:
+            # Otherwise, just append new data point
             self.x.append(next_time)
             self.y1.append(data[0]); self.y2.append(data[1]); self.y3.append(data[2]); self.y4.append(data[3])
             self.idx = min(len(self.y1), self.plotSamples)
-            self.y1new = self.y1[-self.idx:]; self.y2new = self.y2[-self.idx:]; self.y3new = self.y3[-self.idx:]; self.y4new = self.y4[-self.idx:]
-            self.y_data = [self.y1new, self.y2new, self.y3new, self.y4new]
+            self.y1 = self.y1[-self.idx:]; self.y2 = self.y2[-self.idx:]; self.y3 = self.y3[-self.idx:]; self.y4 = self.y4[-self.idx:]
+            self.y_data = [self.y1, self.y2, self.y3, self.y4]
             self._radio_flags = radio_flags
             self.Ch1CountsLabel.setText(str(data[0]))
             self.Ch2CountsLabel.setText(str(data[1]))
@@ -882,14 +906,25 @@ class MainWindow(QMainWindow):
             self.Ch4CountsLabel.setText(str(data[3]))
             self._singles_plotted = True
             self._data_plotted = self._singles_plotted or self._pairs_plotted
-            self.updatePlots(self._radio_flags)
+        elif len(self.x) > self.plotSamples:
+            # If user reduces plot samples to less than already plotted, truncate as requested. First truncate one more data point than requested
+            # since we add one back right after.
+            cutoff_idx = self.plotSamples + 1
+            self.x = self.x[-cutoff_idx:]
+            self.x.append(next_time)
+            self.y1 = self.y1[-cutoff_idx:]; self.y2 = self.y2[-cutoff_idx:]; self.y3 = self.y3[-cutoff_idx:]; self.y4 = self.y4[-cutoff_idx:]
+            self.y1.append(data[0]); self.y2.append(data[1]); self.y3.append(data[2]); self.y4.append(data[3])
+            self.y_data = [self.y1, self.y2, self.y3, self.y4]
+        self.updatePlots(self._radio_flags)
     
     # Updating plots 1-4
     def updatePlots(self, radio_flags: list):
         for i in range(len(radio_flags)):
+            # Only show plots with the Radio button selected
             if radio_flags[i] == 1:
+                print(f'Updating radio plot {i}.')
                 self.linePlots[i].setData(self.x[-self.idx:], self.y_data[i][-self.idx:])
-                #print(f'radio plot {i} updated.')
+                print(f'radio plot {i} updated.')
 
     # Radio button slots (functions)
     @QtCore.pyqtSlot('PyQt_PyObject')
@@ -1155,11 +1190,6 @@ class MainWindow(QMainWindow):
         self.y2=[]
         self.y3=[]
         self.y4=[]
-        self.xnew = []
-        self.y1new = []
-        self.y2new = []
-        self.y3new = []
-        self.y4new = []
         self.linePlot1.setData(self.x, self.y1)
         self.linePlot2.setData(self.x, self.y2)
         self.linePlot3.setData(self.x, self.y3)
@@ -1170,8 +1200,6 @@ class MainWindow(QMainWindow):
     def resetPairs(self):
         self.x0=np.arange(0, self.bins*self.binsize, self.binsize)
         self.y0=np.zeros_like(self.x0)
-        #self.x0new = []
-        #self.y0new = []
         self.histogramPlot.setData(self.x0, self.y0)
         self.radio1_Button.setChecked(False)
         self.radio2_Button.setChecked(False)
@@ -1238,3 +1266,14 @@ if __name__ == '__main__':
 # 2. There are two classes: logWorker and MainWindow
 #   - logWorker handles the data logging to the csv file via a separate thread
 #   - MainWindow contains the GUI as well as graph plotting functions
+
+######################
+# Update History     #
+######################
+
+# v1.3 (26.5.2022)
+# Started update history with v1.3.
+# Fixed GUI plot not updating after hitting PLT_SAMPLES limit.
+# Fixed error when choosing integration time < 1000 ms. Logger was receiving floats when it was expecting int. Logger now expects floats.
+# Fixed wrong call to QFileDialog when selecting log file.
+# Minor update to GUI states when selecting GUI modes.

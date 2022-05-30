@@ -1322,11 +1322,13 @@ if __name__ == '__main__':
 # Added level selection.
 # Fixed bugs associated with internal states when hitting 'liveStop'.
 
+# v1.3.1 (30.5.2022)
+# Fixed counts labels not updating after a while.
+# Properly split pairs/g2 functionality.
+
 ###################################
 # TO CHECK AND FIX IF NEEDED      #
 ###################################
 
-# Last updated (27.5.2022)
-# Number on RHS of counts graph stop updating after a while (unsure exact duration, have to try to repro)
+# Last updated (30.5.2022)
 # GUI cannot start after pressing Live Stop with timer in g2 mode
-# Double check g2 code responsible for calculation for any scaling errors or strange periodic behaviours

@@ -1,6 +1,6 @@
-# sfifteen tdc1 GUI (1.3)
+# sfifteen tdc1 GUI (1.3.1)
 
-GUI UPDATED v1.3 26/5/2022: Fixed Singles plot not plotting past a certain number of data points. Now plots up to 500 data points in Singles mode consistently.
+GUI UPDATED v1.3.1 30/5/2022: In Pairs mode, the counts graph now shows individual channel counts, while the numbers on the right of the graph display coincidences between channels (from top to bottom) 1-3, 1-4, 2-3, 2-4.
 
 **INFO**
 

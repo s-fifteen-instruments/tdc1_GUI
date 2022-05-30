@@ -259,8 +259,8 @@ class MainWindow(QMainWindow):
 
         self.integration_time = int(self.integrationSpinBox.text())
         self._logfile_name = '' # Track the logfile(csv) being used by GUI
-        self._ch_start = int(self.channelsCombobox1.currentText()) # Start channel for pairs
-        self._ch_stop = int(self.channelsCombobox2.currentText()) # Stop channel for pairs
+        self._ch_start = int(self.channelsCombobox1.currentText()) # Start channel for g2
+        self._ch_stop = int(self.channelsCombobox2.currentText()) # Stop channel for g2
         self.plotSamples = self.samplesSpinbox.value() # Number of data points to plot
         self.offset = self.offsetSpinbox.value()
         self.bin_width = self.resolutionSpinbox.value()
@@ -280,9 +280,9 @@ class MainWindow(QMainWindow):
 
         self._plot_tab = self.tabs.currentIndex()  # Counts graph = 0, Coincidences graph = 1
         self.idx = min(len(self.y1), self.plotSamples)  # Index for plotting
-        self._singles_plotted = False
-        self._pairs_plotted = False
-        self._data_plotted = self._singles_plotted or self._pairs_plotted
+        self._counts_plotted = False
+        self._g2_plotted = False
+        self._data_plotted = self._counts_plotted or self._g2_plotted
         self.runtimeCheck = self.runtime_Checkbox.isChecked()
         
 
@@ -330,11 +330,11 @@ class MainWindow(QMainWindow):
         self.runtime_Checkbox = QCheckBox("Timer?")
         #self.runtime_Checkbox.stateChanged.connect(self.updateRuntimeSelection)
 
-        self.clearSinglesData_Button = QtWidgets.QPushButton("Clear Data", self)
-        self.clearSinglesData_Button.clicked.connect(self.clearSinglesData)
+        self.clearCountsDataData_Button = QtWidgets.QPushButton("Clear Data", self)
+        self.clearCountsDataData_Button.clicked.connect(self.clearCountsDataData)
 
-        self.clearPairsData_Button = QtWidgets.QPushButton("Clear Data", self)
-        self.clearPairsData_Button.clicked.connect(self.clearPairsData)
+        self.clearg2DataData_Button = QtWidgets.QPushButton("Clear Data", self)
+        self.clearg2DataData_Button.clicked.connect(self.clearg2DataData)
 
         #---------Buttons---------#
 
@@ -367,9 +367,9 @@ class MainWindow(QMainWindow):
         self.startChannelLabel = QtWidgets.QLabel("Start Channel:", self)
         self.stopChannelLabel = QtWidgets.QLabel("Stop Channel:", self)
         self.offsetLabel = QtWidgets.QLabel("Stop Ch Offset:", self)
-        self.pairsRateLabel = QtWidgets.QLabel("Total Pairs: <br>" + "0")
-        self.pairsRateLabel.setStyleSheet("font-size: 64px")
-        self.pairsRateLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.g2RateLabel = QtWidgets.QLabel("Total Pairs: <br>" + "0")
+        self.g2RateLabel.setStyleSheet("font-size: 64px")
+        self.g2RateLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.resolutionTextLabel = QtWidgets.QLabel("Bin Width:", self)
 
         self.runtimeLabel = QtWidgets.QLabel("Total Runtime (mins):", self)
@@ -428,7 +428,7 @@ class MainWindow(QMainWindow):
         self.samplesSpinbox.setEnabled(False)
 
         self.offsetSpinbox = QSpinBox(self)
-        self.offsetSpinbox.setRange(0, 65535)
+        self.offsetSpinbox.setRange(-10, 65535)
         self.offsetSpinbox.setKeyboardTracking(False)
         #self.offsetSpinbox.setEnabled(False)
         self.offsetSpinbox.valueChanged.connect(self.updateOffset)
@@ -534,15 +534,15 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.Ch2CountsLabel, 1, 5)
         self.layout.addWidget(self.Ch3CountsLabel, 2, 5)
         self.layout.addWidget(self.Ch4CountsLabel, 3, 5)
-        self.layout.addWidget(self.clearSinglesData_Button, 4, 5)
+        self.layout.addWidget(self.clearCountsDataData_Button, 4, 5)
         self.tab1.setLayout(self.layout)
         self.tabs.addTab(self.tab1, "Counts")
 
         self.tab2 = QWidget()
         self.layout2 = QGridLayout()
         self.layout2.addWidget(self.tdcPlot2, 0, 0, 5, 5)
-        self.layout2.addWidget(self.pairsRateLabel, 0, 5)
-        self.layout2.addWidget(self.clearPairsData_Button, 4, 5)
+        self.layout2.addWidget(self.g2RateLabel, 0, 5)
+        self.layout2.addWidget(self.clearg2DataData_Button, 4, 5)
         self.tab2.setLayout(self.layout2)
         self.tabs.addTab(self.tab2, "g2")
         self.tabs.currentChanged.connect(self.update_plot_tab)
@@ -577,24 +577,24 @@ class MainWindow(QMainWindow):
         self.countsGroupbox.setLayout(self.singlesLayout)
         self.grid.addWidget(self.countsGroupbox, 3, 0, 1, 2)
 
-        self.pairsGroupbox = QGroupBox('g2')
-        self.pairsSpinLayout = QHBoxLayout()
-        self.pairsSpinLayout.addWidget(self.startChannelLabel)
-        self.pairsSpinLayout.addWidget(self.channelsCombobox1)
-        self.pairsSpinLayout.addWidget(self.stopChannelLabel)
-        self.pairsSpinLayout.addWidget(self.channelsCombobox2)
-        #self.pairsLabelLayout = QHBoxLayout()
-        self.pairsCenterLayout = QHBoxLayout()
-        self.pairsCenterLayout.addWidget(self.offsetLabel)
-        self.pairsCenterLayout.addWidget(self.offsetSpinbox)
-        self.pairsCenterLayout.addWidget(self.resolutionTextLabel)
-        self.pairsCenterLayout.addWidget(self.resolutionSpinbox)
-        self.pairsLayout = QVBoxLayout()
-        #self.pairsLayout.addLayout(self.pairsLabelLayout)
-        self.pairsLayout.addLayout(self.pairsSpinLayout)
-        self.pairsLayout.addLayout(self.pairsCenterLayout)
-        self.pairsGroupbox.setLayout(self.pairsLayout)
-        self.grid.addWidget(self.pairsGroupbox, 3, 2, 1, 2)
+        self.g2Groupbox = QGroupBox('g2')
+        self.g2SpinLayout = QHBoxLayout()
+        self.g2SpinLayout.addWidget(self.startChannelLabel)
+        self.g2SpinLayout.addWidget(self.channelsCombobox1)
+        self.g2SpinLayout.addWidget(self.stopChannelLabel)
+        self.g2SpinLayout.addWidget(self.channelsCombobox2)
+        #self.g2LabelLayout = QHBoxLayout()
+        self.g2CenterLayout = QHBoxLayout()
+        self.g2CenterLayout.addWidget(self.offsetLabel)
+        self.g2CenterLayout.addWidget(self.offsetSpinbox)
+        self.g2CenterLayout.addWidget(self.resolutionTextLabel)
+        self.g2CenterLayout.addWidget(self.resolutionSpinbox)
+        self.g2Layout = QVBoxLayout()
+        #self.g2Layout.addLayout(self.g2LabelLayout)
+        self.g2Layout.addLayout(self.g2SpinLayout)
+        self.g2Layout.addLayout(self.g2CenterLayout)
+        self.g2Groupbox.setLayout(self.g2Layout)
+        self.grid.addWidget(self.g2Groupbox, 3, 2, 1, 2)
 
         self.grid.addWidget(self.samplesLabel, 3, 4)
         self.grid.addWidget(self.samplesSpinbox, 3, 5)
@@ -647,7 +647,7 @@ class MainWindow(QMainWindow):
     def updateDeviceMode(self, newMode: str):
         if newMode == 'Select mode': # If user selects default text
             pass
-        elif self._dev_selected == True and self.acq_flag == False and self._data_plotted == True: # Dev inactive, data acq not underway
+        elif self._dev_selected == True and self.acq_flag == False and self._data_plotted == True: # Device inactive, data acq not underway, and no data is plotted
             msgBox = QtWidgets.QMessageBox()
             msgBox.setIcon(QtWidgets.QMessageBox.Information)
             msgBox.setText('Any data unsaved to a Logfile will be lost upon changing device mode. Are you sure?')
@@ -710,7 +710,7 @@ class MainWindow(QMainWindow):
         self.liveStart_Button.setText("Live Start")
 
     @QtCore.pyqtSlot('PyQt_PyObject')
-    def closethreads_ports_timers_logs(self, dev):
+    def logfile_permission_error_reset(self, dev):
         msgBox = QtWidgets.QMessageBox()
         msgBox.setIcon(QtWidgets.QMessageBox.Critical)
         msgBox.setText('Ensure logfile is not open in another program.')
@@ -789,7 +789,7 @@ class MainWindow(QMainWindow):
                 self._tdc1_dev = tdc1.TimeStampTDC1(self.devCombobox.currentText())
             self.acq_flag = True
             if self._data_plotted == True:
-                if self.modesCombobox.currentText() == 'g2' and self._pairs_plotted == True:
+                if self.modesCombobox.currentText() == 'g2' and self._g2_plotted == True:
                     msgBox = QtWidgets.QMessageBox()
                     msgBox.setIcon(QtWidgets.QMessageBox.Information)
                     msgBox.setText('A g2 plot already exists. Clear the old plot and start anew?')
@@ -797,10 +797,10 @@ class MainWindow(QMainWindow):
                     msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
                     returnValue = msgBox.exec()
                     if returnValue == QMessageBox.Ok:
-                        self.resetPairs()
+                        self.resetg2Plot()
                     else:
                         return
-                elif self.modesCombobox.currentText() == 'singles' and self._singles_plotted == True:
+                elif self.modesCombobox.currentText() == 'singles' and self._counts_plotted == True:
                     msgBox = QtWidgets.QMessageBox()
                     msgBox.setIcon(QtWidgets.QMessageBox.Information)
                     msgBox.setText('A Singles plot already exists. Clear the old plot and start anew?')
@@ -808,18 +808,18 @@ class MainWindow(QMainWindow):
                     msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
                     returnValue = msgBox.exec()
                     if returnValue == QMessageBox.Ok:
-                        self.resetSingles()
+                        self.resetCountsPlot()
                     else:
                         return
-                elif self.modesCombobox.currentText() == 'pairs' and self._singles_plotted == True:
+                elif self.modesCombobox.currentText() == 'pairs' and self._counts_plotted == True:
                     msgBox = QtWidgets.QMessageBox()
                     msgBox.setIcon(QtWidgets.QMessageBox.Information)
-                    msgBox.setText('A pairs plot already exists. Clear the old plot and start anew?')
+                    msgBox.setText('A Pairs plot already exists. Clear the old plot and start anew?')
                     msgBox.setWindowTitle('Existing Pairs Plot')
                     msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
                     returnValue = msgBox.exec()
                     if returnValue == QMessageBox.Ok:
-                        self.resetSingles()
+                        self.resetCountsPlot()
                     else:
                         return
             self.selectLogfile_Button.setEnabled(False)
@@ -856,10 +856,10 @@ class MainWindow(QMainWindow):
 
         # Connect signals and slots AFTER moving the object to the thread
         self.logging_requested.connect(self.logger.log_which_data)
-        self.logger.data_is_logged.connect(self.update_data_from_thread)
+        self.logger.data_is_logged.connect(self.update_counts_plot_from_thread)
         self.logger.histogram_logged.connect(self.updateHistogram)
         self.logger.thread_finished.connect(self.closethreads_ports_timers)
-        self.logger.permission_error.connect(self.closethreads_ports_timers_logs)
+        self.logger.permission_error.connect(self.logfile_permission_error_reset)
 
         self.logger.int_time = int(self.integrationSpinBox.text()) * 1e-3 # Convert to seconds
         #self.log_flag = True
@@ -890,7 +890,7 @@ class MainWindow(QMainWindow):
     # Updating data
     # Connected to data_is_logged signal
     @QtCore.pyqtSlot(float, float, tuple, str, list)
-    def update_data_from_thread(self, start: float, now: float, data: tuple, dev_mode: str, radio_flags: list):
+    def update_counts_plot_from_thread(self, start: float, now: float, data: tuple, dev_mode: str, radio_flags: list):
         #print(f'data is {data}')
         next_time = now-start
         if len(self.x) == PLT_SAMPLES:
@@ -908,12 +908,6 @@ class MainWindow(QMainWindow):
             self.y1 = self.y1[-self.idx:]; self.y2 = self.y2[-self.idx:]; self.y3 = self.y3[-self.idx:]; self.y4 = self.y4[-self.idx:]
             self.y_data = [self.y1, self.y2, self.y3, self.y4]
             self._radio_flags = radio_flags
-            self.Ch1CountsLabel.setText(str(data[0]))
-            self.Ch2CountsLabel.setText(str(data[1]))
-            self.Ch3CountsLabel.setText(str(data[2]))
-            self.Ch4CountsLabel.setText(str(data[3]))
-            self._singles_plotted = True
-            self._data_plotted = self._singles_plotted or self._pairs_plotted
         elif len(self.x) > self.plotSamples:
             # If user reduces plot samples to less than already plotted, truncate as requested. We truncate one more data point than requested
             # since we add the new one right after.
@@ -923,6 +917,20 @@ class MainWindow(QMainWindow):
             self.y1 = self.y1[-cutoff_idx:]; self.y2 = self.y2[-cutoff_idx:]; self.y3 = self.y3[-cutoff_idx:]; self.y4 = self.y4[-cutoff_idx:]
             self.y1.append(data[0]); self.y2.append(data[1]); self.y3.append(data[2]); self.y4.append(data[3])
             self.y_data = [self.y1, self.y2, self.y3, self.y4]
+        if dev_mode == 'singles':
+            # Counts labels will show single channel counts
+            self.Ch1CountsLabel.setText(str(data[0]))
+            self.Ch2CountsLabel.setText(str(data[1]))
+            self.Ch3CountsLabel.setText(str(data[2]))
+            self.Ch4CountsLabel.setText(str(data[3]))
+        elif dev_mode == 'pairs':
+            # Counts labels will show Ch 1-3, 1-4, 2-3, 2-4 coincidences
+            self.Ch1CountsLabel.setText(str(data[4]))
+            self.Ch2CountsLabel.setText(str(data[5]))
+            self.Ch3CountsLabel.setText(str(data[6]))
+            self.Ch4CountsLabel.setText(str(data[7]))
+        self._counts_plotted = True
+        self._data_plotted = self._counts_plotted or self._g2_plotted
         self.updatePlots(self._radio_flags)
     
     # Updating plots 1-4
@@ -1036,20 +1044,16 @@ class MainWindow(QMainWindow):
     def updateHistogram(self, g2_data: dict, bins: int, bin_width: int):
         # {int - ch_start counts, int- ch_stop counts, int - actual acq time, float - time bins, float - histogram values}
         # time bins and histogram vals are both np arrays
-        #print('updating histogram')
-        self._pairs_plotted = True
-        self._data_plotted = self._singles_plotted or self._pairs_plotted
         incremental_y = g2_data['histogram']
         incremental_y_int = incremental_y.astype(np.int32)
         beans = len(incremental_y_int)
         self.y0 = self.wonkyAdd(y0 = self.y0, incremental = incremental_y_int)
-        #print(len(self.y0))
         self.x0 = np.arange(0, beans*bin_width, bin_width)
-        #print(len(self.x0))
         self.histogramPlot.setData(self.x0, self.y0)
         totalpairs = np.sum(self.y0, dtype=np.int32)
-        self.pairsRateLabel.setText("Total Pairs: " + "<br>" + str(totalpairs))
-        #print('histogram updated')
+        self._g2_plotted = True
+        self._data_plotted = self._counts_plotted or self._g2_plotted
+        self.g2RateLabel.setText("Total Pairs: " + "<br>" + str(totalpairs))
     
     @staticmethod
     def wonkyAdd(y0: np.array, incremental: np.array):
@@ -1080,12 +1084,7 @@ class MainWindow(QMainWindow):
         if self.logger:
             self.logger.runtime = runtime_mins
 
-    # @QtCore.pyqtSlot()
-    # def updateRuntimeSelection():
-    #     self.runtimeCheck = self.runtime_Checkbox.isChecked()
-
     def endRun(self):
-        #print('end run called')
         self.liveStart_Button.setEnabled(False)
         QtCore.QTimer.singleShot(1000, lambda: self.liveStart_Button.setEnabled(True)) # In milliseconds
         self.acq_flag = False
@@ -1097,18 +1096,15 @@ class MainWindow(QMainWindow):
         self.selectLogfile_Button.setEnabled(True)
         self.liveStart_Button.setText("Live Start")
 
-
     # Timer
     def startTimer(self):
         time = self.timer.start(1000)
         self.timer.timeout.connect(self.updateTimer)
-        #print('timer connected')
     
     def stopTimer(self):
         if self.timer.isActive():
             self.timer.stop()
             self.timer.timeout.disconnect()
-            #print('timer disconnected')
 
     def updateTimer(self):
         if self._runtime > 0:
@@ -1120,9 +1116,9 @@ class MainWindow(QMainWindow):
             minutes = total_seconds // 60
             seconds = total_seconds - (minutes * 60)
             self.countdownLabel.setText("{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds)))
-            #print(self._runtime)
         else:
             self.countdownLabel.setStyleSheet("color: gray; font-size: 24px")
+            print(f'Timer is up! Data was collected for {self.runtimeSpinbox.value()} minute(s).')
             self.endRun()
 
     # RESETS for internal variables
@@ -1144,7 +1140,7 @@ class MainWindow(QMainWindow):
     def WeakResetInternalVariables(self):
         # Excludes resetting variables relating to the device object (device, mode, path)
         self.integration_time = 1
-        self._logfile_name = '' # Track the logfile(csv) being used by GUI
+        self._logfile_name = '' # Track the logfile being used by GUI
         self.log_flag = False
         self.deleteWorkerAndThread()
 
@@ -1222,7 +1218,7 @@ class MainWindow(QMainWindow):
         self.radio3_Button.setChecked(False)
         self.radio4_Button.setChecked(False)
 
-    def resetSingles(self):
+    def resetCountsPlot(self):
         self.x=[]
         self.y1=[]
         self.y2=[]
@@ -1232,56 +1228,64 @@ class MainWindow(QMainWindow):
         self.linePlot2.setData(self.x, self.y2)
         self.linePlot3.setData(self.x, self.y3)
         self.linePlot4.setData(self.x, self.y4)
-        self._singles_plotted = False
-        self._data_plotted = self._singles_plotted or self._pairs_plotted
+        self.resetRadioButtons()
+        self._counts_plotted = False
+        self._data_plotted = self._counts_plotted or self._g2_plotted
 
-    def resetPairs(self):
+    def resetg2Plot(self):
         self.x0=np.arange(0, self.bins*self.binsize, self.binsize)
         self.y0=np.zeros_like(self.x0)
         self.histogramPlot.setData(self.x0, self.y0)
-        self.radio1_Button.setChecked(False)
-        self.radio2_Button.setChecked(False)
-        self.radio3_Button.setChecked(False)
-        self.radio4_Button.setChecked(False)
         self._radio_flags = [0,0,0,0]
-        self._pairs_plotted = False
-        self._data_plotted = self._singles_plotted or self._pairs_plotted
+        self._g2_plotted = False
+        self._data_plotted = self._counts_plotted or self._g2_plotted
 
     def resetDataAndPlots(self):
-        self.resetSingles()
-        self.resetPairs()
+        self.resetCountsPlot()
+        self.resetg2Plot()
 
     @QtCore.pyqtSlot()
-    def clearSinglesData(self):
+    def clearCountsDataData(self):
         msgBox = QtWidgets.QMessageBox()
         msgBox.setIcon(QtWidgets.QMessageBox.Information)
-        msgBox.setText('Any Singles data unsaved to logfile will be lost. Click Ok to confirm.')
+        msgBox.setText('Any Counts data unsaved to logfile will be lost. Click Ok to confirm.')
         msgBox.setWindowTitle('Confirm Clear Singles.')
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         returnValue = msgBox.exec()
         if returnValue == QMessageBox.Ok:
-            self.resetSingles()
+            self.resetCountsPlot()
 
     @QtCore.pyqtSlot()
-    def clearPairsData(self):
+    def clearg2DataData(self):
         msgBox = QtWidgets.QMessageBox()
         msgBox.setIcon(QtWidgets.QMessageBox.Information)
-        msgBox.setText('Any Pairs data unsaved to logfile will be lost. Click Ok to confirm.')
+        msgBox.setText('Any g2 data unsaved to logfile will be lost. Click Ok to confirm.')
         msgBox.setWindowTitle('Confirm Clear Pairs.')
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         returnValue = msgBox.exec()
         if returnValue == QMessageBox.Ok:
-            self.resetPairs()
+            self.resetg2Plot()
     
     # Dummmy slot for QTimer
     @QtCore.pyqtSlot()
     def dummy(self):
         pass
 
+    def cleanUp(self):
+        print('Performing cleanup...')
+        self.acq_flag = False
+        self.log_flag = False
+        if self.logger:
+            self.logger.active_flag = False
+        self.stopWorkerAndThread()
+        self.stopTimer()
+        print('Exiting app, bye!')
+
 def main():
         app = QApplication(sys.argv)
         win = MainWindow()
         win.show()
+        app.aboutToQuit.connect(win.cleanUp)
         sys.exit(app.exec_())
     
 if __name__ == '__main__':
@@ -1317,3 +1321,12 @@ if __name__ == '__main__':
 # Minor update to GUI states when selecting GUI modes.
 # Added level selection.
 # Fixed bugs associated with internal states when hitting 'liveStop'.
+
+###################################
+# TO CHECK AND FIX IF NEEDED      #
+###################################
+
+# Last updated (27.5.2022)
+# Number on RHS of counts graph stop updating after a while (unsure exact duration, have to try to repro)
+# GUI cannot start after pressing Live Stop with timer in g2 mode
+# Double check g2 code responsible for calculation for any scaling errors or strange periodic behaviours

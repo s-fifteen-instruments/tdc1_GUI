@@ -447,7 +447,7 @@ class MainWindow(QMainWindow):
         self.runtimeSpinbox.valueChanged.connect(self.updateRuntime)
         self.runtimeSpinbox.setEnabled(False)
 
-        _levels = ['NIM (-0.5V)', 'TTL (+1.6V)']
+        _levels = ['NIM (-0.5V)', 'TTL (+1.6V)', 'TTL (+0.5V)']
         self.levelsComboBox = QComboBox(self)
         self.channelsCombobox2.addItem('Select')
         self.levelsComboBox.addItems(_levels)
@@ -1034,6 +1034,10 @@ class MainWindow(QMainWindow):
             self._level = 'NIM'
             print('1')
             self._tdc1_dev.level = 'NIM'
+            print(f'Device at {self._dev_path} is now at {self._level} level')
+        elif level == 'TTL (+0.5V)' and self._tdc1_dev:
+            self._level = 'USER'
+            self._tdc1_dev.threshold = 0.5
             print(f'Device at {self._dev_path} is now at {self._level} level')
         elif level == 'Select':
             pass

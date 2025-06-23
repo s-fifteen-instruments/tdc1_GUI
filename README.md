@@ -15,9 +15,9 @@ GUI UPDATED v1.3.1 30/5/2022: In Pairs mode, the counts graph now shows individu
 
 Install the S15lib python package directly with
  
-    pip install git+https://github.com/s-fifteen-instruments/pyS15.git
+    pip install git+https://github.com/s-fifteen-instruments/pyS15.git@no_compile
 
-Alternatively you can clone or download the package from https://github.com/s-fifteen-instruments/pyS15.git.
+Alternatively you can clone or download the package from https://github.com/s-fifteen-instruments/pyS15/tree/no_compile.
 Open a command-line terminal, go into the repository folder and type
   
     pip install -e .

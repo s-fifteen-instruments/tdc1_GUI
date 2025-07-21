@@ -49,7 +49,7 @@ import serial
 """
 
 
-PLT_SAMPLES = 501 # plot samples
+PLT_SAMPLES = 21 # plot samples
 
 class logWorker(QtCore.QObject):
     """[summary]
@@ -73,7 +73,7 @@ class logWorker(QtCore.QObject):
         self.ch_start = 1
         self.ch_stop = 3
         self.bin_width = 2
-        self.bins = 501
+        self.bins = 21
         self.offset = 0
         self.runtime = 0
     
@@ -383,7 +383,7 @@ class MainWindow(QMainWindow):
         #---------Interactive Fields---------#
         self.integrationSpinBox = QSpinBox(self)
         self.integrationSpinBox.setRange(0, 65535)  # Max integration time based on tdc1 specs
-        self.integrationSpinBox.setValue(1000) # Default 1000ms = 1s
+        self.integrationSpinBox.setValue(100) # Default 100ms = 0.1s
         self.integrationSpinBox.setKeyboardTracking(False) # Makes sure valueChanged signal only fires when you want it to
         self.integrationSpinBox.valueChanged.connect(self.update_intTime)
         self.integrationSpinBox.setEnabled(False)
@@ -422,7 +422,7 @@ class MainWindow(QMainWindow):
 
         self.samplesSpinbox = QSpinBox(self)
         self.samplesSpinbox.setRange(0, 65535)
-        self.samplesSpinbox.setValue(501) # Default plot 501 data points
+        self.samplesSpinbox.setValue(21) # Default plot 21 data points
         self.samplesSpinbox.setKeyboardTracking(False)
         self.samplesSpinbox.valueChanged.connect(self.updateBins)
         self.samplesSpinbox.setEnabled(False)
@@ -434,9 +434,9 @@ class MainWindow(QMainWindow):
         self.offsetSpinbox.valueChanged.connect(self.updateOffset)
 
         self.resolutionSpinbox = QSpinBox(self)
-        self.resolutionSpinbox.setRange(0, 1000)
+        self.resolutionSpinbox.setRange(0, 2_000_000)
         self.resolutionSpinbox.setKeyboardTracking(False)
-        self.resolutionSpinbox.setValue(2) # Default 2 ns bin width
+        self.resolutionSpinbox.setValue(5000) # Default 5 us bin width
         self.resolutionSpinbox.valueChanged.connect(self.updateBinwidth)
         #self.resolutionSpinbox.setEnabled(False)
 
@@ -447,7 +447,7 @@ class MainWindow(QMainWindow):
         self.runtimeSpinbox.valueChanged.connect(self.updateRuntime)
         self.runtimeSpinbox.setEnabled(False)
 
-        _levels = ['NIM (-0.5V)', 'TTL (+1.6V)']
+        _levels = ['NIM (-0.5V)', 'TTL (+1.6V)', 'TTL (+0.5V)']
         self.levelsComboBox = QComboBox(self)
         self.channelsCombobox2.addItem('Select')
         self.levelsComboBox.addItems(_levels)
@@ -467,8 +467,8 @@ class MainWindow(QMainWindow):
         self.y_data = [self.y1, self.y2, self.y3, self.y4]
 
         # Plot 2 - Time difference histogram (Channel cross-correlation)
-        self.bins = 501
-        self.binsize = 2 # nanoseconds
+        self.bins = 21
+        self.binsize = 5000 # 5 microseconds
         self.x0 = np.arange(0, self.bins*self.binsize, self.binsize)
         self.y0 = np.zeros_like(self.x0)
         
@@ -1035,6 +1035,10 @@ class MainWindow(QMainWindow):
             print('1')
             self._tdc1_dev.level = 'NIM'
             print(f'Device at {self._dev_path} is now at {self._level} level')
+        elif level == 'TTL (+0.5V)' and self._tdc1_dev:
+            self._level = 'USER'
+            self._tdc1_dev.threshold = 0.5
+            print(f'Device at {self._dev_path} is now at {self._level} level')
         elif level == 'Select':
             pass
 
@@ -1207,8 +1211,8 @@ class MainWindow(QMainWindow):
         self.logfileText.setText('')
         self.selectLogfile_Button.setText('Select Logfile')
         self.resetRadioButtons()
-        self.integrationSpinBox.setValue(1000)
-        self.samplesSpinbox.setValue(501)
+        self.integrationSpinBox.setValue(100)
+        self.samplesSpinbox.setValue(21)
         self.runtimeSpinbox.setValue(5)
         self.modesCombobox.setCurrentText('Select mode')
 

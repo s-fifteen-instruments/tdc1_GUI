@@ -8,7 +8,7 @@ GUI UPDATED v1.3.1 30/5/2022: In Pairs mode, the counts graph now shows individu
 
 **CONTACT**
 
-1. For any bug reports/suggestions, please contact the developer at info@s-fifteen.com or g3.ganjunherng@gmail.com.
+1. For any bug reports/suggestions, please contact the developer at info@s-fifteen.com.
 2. It would be helpful if you included the error messages printed out to the terminal or whatever program that is catching the errors. (Do not worry if you cannot find this.)
 
 **INSTALLATION QUICKSTART**
